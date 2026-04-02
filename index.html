@@ -1,0 +1,844 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Athlone Cricket Club</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f5f5f0; color: #1a1a18; min-height: 100vh; }
+ 
+  .app-wrap { max-width: 900px; margin: 0 auto; padding: 16px; }
+ 
+  /* HEADER */
+  .club-header { display: flex; align-items: center; gap: 12px; margin-bottom: 18px; padding: 14px 16px; background: #fff; border-radius: 12px; border: 0.5px solid #ddd; }
+  .club-icon { width: 42px; height: 42px; border-radius: 50%; background: #1D9E75; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; }
+  .club-title { font-size: 18px; font-weight: 600; }
+  .club-sub { font-size: 12px; color: #888; }
+  #header-stats { margin-left: auto; font-size: 12px; color: #888; text-align: right; line-height: 1.6; }
+ 
+  /* SYNC STATUS */
+  #sync-status { display: inline-flex; align-items: center; gap: 5px; font-size: 11px; padding: 3px 9px; border-radius: 99px; font-weight: 500; transition: all .3s; }
+  #sync-status.idle    { background: #f0f0ec; color: #888; }
+  #sync-status.syncing { background: #e8f0fb; color: #1a4a8a; }
+  #sync-status.ok      { background: #e8f8f0; color: #1a7a50; }
+  #sync-status.error   { background: #fdf0ee; color: #c0392b; }
+  .sync-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+  .sync-dot.pulse { animation: pulse 1s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
+ 
+  /* CONFIG BANNER */
+  #config-banner { background: #FAEEDA; border: 1px solid #EF9F27; border-radius: 10px; padding: 12px 16px; margin-bottom: 16px; font-size: 13px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  #config-banner a { color: #633806; font-weight: 600; }
+ 
+  /* NAV */
+  nav { display: flex; gap: 2px; border-bottom: 1px solid #e0e0e0; margin-bottom: 20px; flex-wrap: wrap; background: #fff; border-radius: 10px 10px 0 0; padding: 0 4px; }
+  .nav-btn { background: none; border: none; padding: 12px 16px; font-size: 13px; color: #888; cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px; transition: color .15s; white-space: nowrap; }
+  .nav-btn:hover { color: #1a1a18; }
+  .nav-btn.active { color: #1a1a18; border-bottom-color: #1a1a18; font-weight: 500; }
+ 
+  /* PAGES */
+  .page { display: none; }
+  .page.active { display: block; }
+  .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 8px; }
+  .page-title { font-size: 18px; font-weight: 600; }
+ 
+  /* BUTTONS */
+  .btn { background: none; border: 1px solid #ccc; border-radius: 8px; padding: 7px 14px; font-size: 13px; cursor: pointer; color: #1a1a18; transition: background .15s; font-family: inherit; }
+  .btn:hover { background: #f0f0ec; }
+  .btn-primary { background: #1a1a18; color: #fff; border-color: transparent; }
+  .btn-primary:hover { background: #333; }
+  .btn-sm { padding: 4px 10px; font-size: 12px; }
+  .btn-danger { color: #c0392b; border-color: #f5b7b1; }
+  .btn-danger:hover { background: #fdf0ee; }
+ 
+  /* CARDS */
+  .card { background: #fff; border: 0.5px solid #e0e0e0; border-radius: 12px; padding: 14px 16px; }
+ 
+  /* GRIDS */
+  .grid-2 { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 12px; }
+  .grid-3 { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; }
+ 
+  /* PLAYER CARD */
+  .player-card { position: relative; display: flex; align-items: flex-start; gap: 12px; padding: 12px 14px; background: #fff; border: 0.5px solid #e0e0e0; border-radius: 12px; transition: border-color .15s; }
+  .player-card:hover { border-color: #bbb; }
+  .player-card.is-starred { border-color: #FAC775; }
+  .avatar { width: 40px; height: 40px; min-width: 40px; border-radius: 50%; background: #eee; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 14px; color: #666; }
+  .player-name { font-weight: 600; font-size: 14px; }
+  .player-role { font-size: 12px; color: #888; margin-top: 3px; }
+  .star-btn { background: none; border: none; cursor: pointer; font-size: 20px; line-height: 1; padding: 2px; color: #ccc; transition: transform .1s; position: absolute; top: 10px; right: 10px; }
+  .star-btn:hover { transform: scale(1.2); }
+  .star-btn.starred { color: #EF9F27; }
+  .player-actions { display: flex; gap: 6px; margin-top: 8px; }
+ 
+  /* BADGES */
+  .badge { display: inline-block; padding: 2px 8px; border-radius: 99px; font-size: 11px; font-weight: 500; }
+  .badge-green { background: #e8f8f0; color: #1a7a50; }
+  .badge-blue { background: #e8f0fb; color: #1a4a8a; }
+  .badge-amber { background: #FAEEDA; color: #633806; }
+  .badge-gray { background: #f0f0ec; color: #666; }
+  .badge-purple { background: #EEEDFE; color: #3C3489; }
+ 
+  /* FORMS */
+  .form-row { margin-bottom: 12px; }
+  .form-row label { display: block; font-size: 12px; color: #888; margin-bottom: 4px; }
+  input[type=text], input[type=date], input[type=number], select, textarea {
+    width: 100%; padding: 8px 10px; border: 1px solid #ddd; border-radius: 8px;
+    font-size: 13px; font-family: inherit; color: #1a1a18; background: #fff;
+    outline: none; transition: border-color .15s;
+  }
+  input:focus, select:focus, textarea:focus { border-color: #888; }
+  textarea { resize: vertical; }
+  .form-2col { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+ 
+  /* MODAL */
+  .modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,.45); z-index: 100; display: flex; align-items: center; justify-content: center; padding: 16px; }
+  .modal { background: #fff; border-radius: 14px; padding: 22px; max-width: 480px; width: 100%; max-height: 88vh; overflow-y: auto; box-shadow: 0 8px 32px rgba(0,0,0,.18); }
+  .modal-title { font-size: 16px; font-weight: 600; margin-bottom: 16px; }
+  .modal-footer { display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px; }
+ 
+  /* TABLE */
+  .table-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th { font-weight: 500; font-size: 12px; color: #888; text-align: left; padding: 8px 12px; border-bottom: 1px solid #eee; white-space: nowrap; }
+  td { padding: 10px 12px; border-bottom: 1px solid #eee; }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: #fafafa; }
+ 
+  /* MATCH CARDS */
+  .match-card { padding: 14px 16px; background: #fff; border: 0.5px solid #e0e0e0; border-radius: 12px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 10px; transition: border-color .15s; }
+  .match-card:hover { border-color: #bbb; }
+  .match-opponent { font-weight: 600; font-size: 15px; }
+  .match-meta { font-size: 12px; color: #888; margin-top: 3px; }
+  .match-actions { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+ 
+  /* RESULTS */
+  .result-win { color: #1a7a50; font-weight: 600; }
+  .result-loss { color: #c0392b; font-weight: 600; }
+  .result-draw { color: #888; font-weight: 600; }
+ 
+  /* STATS */
+  .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(90px, 1fr)); gap: 10px; margin-bottom: 16px; }
+  .stat-card { background: #f5f5f0; border-radius: 10px; padding: 14px; text-align: center; }
+  .stat-val { font-size: 26px; font-weight: 600; }
+  .stat-label { font-size: 11px; color: #888; margin-top: 2px; }
+ 
+  /* SUBTABS */
+  .sub-tabs { display: flex; gap: 6px; margin-bottom: 16px; flex-wrap: wrap; }
+  .sub-tab { background: none; border: 1px solid #ddd; border-radius: 8px; padding: 5px 12px; font-size: 12px; cursor: pointer; color: #888; transition: all .15s; font-family: inherit; }
+  .sub-tab.active { background: #1a1a18; color: #fff; border-color: transparent; }
+ 
+  /* SECTION LABEL */
+  .section-label { font-size: 11px; font-weight: 600; color: #888; text-transform: uppercase; letter-spacing: .06em; margin-bottom: 10px; }
+ 
+  /* SELECTION */
+  .player-check { display: flex; align-items: center; gap: 10px; padding: 9px 0; border-bottom: 1px solid #eee; font-size: 14px; cursor: pointer; }
+  .player-check:last-child { border-bottom: none; }
+  .player-check input { width: 16px; height: 16px; cursor: pointer; accent-color: #1a1a18; }
+ 
+  /* PHOTOS */
+  .album-frame { border: 1px solid #e0e0e0; border-radius: 12px; overflow: hidden; background: #f5f5f0; margin-top: 12px; }
+  .album-placeholder { height: 320px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; color: #888; font-size: 14px; }
+ 
+  /* EMPTY STATE */
+  .empty-state { text-align: center; padding: 48px 20px; color: #aaa; font-size: 14px; }
+ 
+  .hidden { display: none !important; }
+ 
+  @media (max-width: 520px) {
+    .form-2col { grid-template-columns: 1fr; }
+    .nav-btn { padding: 10px 10px; font-size: 12px; }
+    .app-wrap { padding: 10px; }
+  }
+</style>
+</head>
+<body>
+<div class="app-wrap">
+ 
+  <!-- CONFIG BANNER (shown if SCRIPT_URL not set) -->
+  <div id="config-banner" class="hidden">
+    ⚠️ Google Sheets sync not configured. Open this file in a text editor, find <code>SCRIPT_URL</code> near the top of the &lt;script&gt; section, and paste your Apps Script Web App URL there.
+  </div>
+ 
+  <!-- HEADER -->
+  <div class="club-header">
+    <div class="club-icon">🏏</div>
+    <div>
+      <div class="club-title">Athlone Cricket Club</div>
+      <div class="club-sub">Club Management</div>
+    </div>
+    <div id="header-stats">
+      <div id="sync-status" class="idle"><span class="sync-dot"></span> <span id="sync-text">Sheets ready</span></div>
+    </div>
+  </div>
+ 
+  <!-- NAV -->
+  <nav>
+    <button class="nav-btn active" onclick="showPage('players', this)">Players</button>
+    <button class="nav-btn" onclick="showPage('schedule', this)">Schedule</button>
+    <button class="nav-btn" onclick="showPage('selection', this)">Selection</button>
+    <button class="nav-btn" onclick="showPage('results', this)">Results</button>
+    <button class="nav-btn" onclick="showPage('photos', this)">Photos</button>
+  </nav>
+ 
+  <!-- PLAYERS -->
+  <div id="page-players" class="page active">
+    <div class="page-header">
+      <div>
+        <div class="page-title">Squad</div>
+        <div style="font-size:12px;color:#888;margin-top:2px;" id="squad-count"></div>
+      </div>
+      <button class="btn btn-primary" onclick="openAddPlayer()">+ Add Player</button>
+    </div>
+    <div class="sub-tabs">
+      <button class="sub-tab active" onclick="filterPlayers('all',this)">All</button>
+      <button class="sub-tab" onclick="filterPlayers('starred',this)">Starred ★</button>
+      <button class="sub-tab" onclick="filterPlayers('Batsman',this)">Batters</button>
+      <button class="sub-tab" onclick="filterPlayers('Bowler',this)">Bowlers</button>
+      <button class="sub-tab" onclick="filterPlayers('All-Rounder',this)">All-Rounders</button>
+      <button class="sub-tab" onclick="filterPlayers('Wicketkeeper',this)">Keepers</button>
+    </div>
+    <div id="players-list" class="grid-2"></div>
+  </div>
+ 
+  <!-- SCHEDULE -->
+  <div id="page-schedule" class="page">
+    <div class="page-header">
+      <div class="page-title">Fixtures</div>
+      <button class="btn btn-primary" onclick="openAddMatch()">+ Add Fixture</button>
+    </div>
+    <div class="section-label">Upcoming</div>
+    <div id="upcoming-matches"></div>
+    <div style="margin-top:20px;" class="section-label">Past</div>
+    <div id="past-matches"></div>
+  </div>
+ 
+  <!-- SELECTION -->
+  <div id="page-selection" class="page">
+    <div class="page-header"><div class="page-title">Match Selection</div></div>
+    <div class="form-row">
+      <label>Choose fixture</label>
+      <select id="sel-fixture" onchange="loadSelection()">
+        <option value="">— select a fixture —</option>
+      </select>
+    </div>
+    <div id="sel-panel" class="hidden">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px;">
+        <div id="sel-count" style="font-size:13px;color:#888;">0 / 11 selected</div>
+        <div style="display:flex;gap:6px;">
+          <button class="btn btn-sm" onclick="clearSelection()">Clear</button>
+          <button class="btn btn-sm btn-primary" id="save-sel-btn" onclick="saveSelection()">Save Selection</button>
+        </div>
+      </div>
+      <div id="sel-list" class="card" style="padding:8px 14px;"></div>
+      <div id="sel-summary" style="margin-top:12px;"></div>
+    </div>
+  </div>
+ 
+  <!-- RESULTS -->
+  <div id="page-results" class="page">
+    <div class="page-header"><div class="page-title">Results</div></div>
+    <div class="stats-grid" id="stats-grid"></div>
+    <div class="card table-wrap">
+      <table>
+        <thead>
+          <tr><th>Date</th><th>Opponent</th><th>Venue</th><th>Result</th><th>Scores</th><th>Player of Match</th><th>Notes</th><th></th></tr>
+        </thead>
+        <tbody id="results-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+ 
+  <!-- PHOTOS -->
+  <div id="page-photos" class="page">
+    <div class="page-header">
+      <div class="page-title">Photo Albums</div>
+      <button class="btn btn-primary" onclick="openAddAlbum()">+ Add Album</button>
+    </div>
+    <div id="albums-grid" class="grid-3" style="margin-bottom:16px;"></div>
+    <div id="album-viewer"></div>
+  </div>
+ 
+</div>
+ 
+<!-- MODALS -->
+<div id="modal-bg" class="modal-backdrop hidden" onclick="bgClose(event)">
+ 
+  <!-- Player -->
+  <div id="modal-player" class="modal hidden">
+    <div class="modal-title" id="pm-title">Add Player</div>
+    <div class="form-2col">
+      <div class="form-row"><label>First name</label><input type="text" id="p-first" placeholder="e.g. Ciarán"></div>
+      <div class="form-row"><label>Last name</label><input type="text" id="p-last" placeholder="e.g. Kelly"></div>
+    </div>
+    <div class="form-row"><label>Role</label>
+      <select id="p-role">
+        <option>Batsman</option><option>Bowler</option><option>All-Rounder</option>
+        <option>Wicketkeeper</option><option>Wicketkeeper-Batsman</option>
+      </select>
+    </div>
+    <div class="form-2col">
+      <div class="form-row"><label>Batting style</label>
+        <select id="p-bat"><option value="">Not specified</option><option>Right-hand bat</option><option>Left-hand bat</option></select>
+      </div>
+      <div class="form-row"><label>Bowling style</label>
+        <select id="p-bowl">
+          <option value="">Not specified</option><option>Right-arm fast</option><option>Right-arm medium</option>
+          <option>Right-arm off-spin</option><option>Right-arm leg-spin</option>
+          <option>Left-arm fast</option><option>Left-arm medium</option><option>Left-arm spin</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row"><label>Notes (captain, vice-captain, etc.)</label><textarea id="p-notes" rows="2"></textarea></div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="savePlayer()">Save Player</button>
+    </div>
+  </div>
+ 
+  <!-- Match -->
+  <div id="modal-match" class="modal hidden">
+    <div class="modal-title">Add Fixture</div>
+    <div class="form-row"><label>Opponent</label><input type="text" id="m-opp" placeholder="e.g. Mullingar CC"></div>
+    <div class="form-2col">
+      <div class="form-row"><label>Date</label><input type="date" id="m-date"></div>
+      <div class="form-row"><label>Format</label>
+        <select id="m-format"><option>20 overs</option><option>35 overs</option><option>40 overs</option><option>50 overs</option><option>T10</option><option>2-day</option></select>
+      </div>
+    </div>
+    <div class="form-2col">
+      <div class="form-row"><label>Venue</label><input type="text" id="m-venue" placeholder="e.g. Coosan"></div>
+      <div class="form-row"><label>Home / Away</label>
+        <select id="m-ha"><option>Home</option><option>Away</option><option>Neutral</option></select>
+      </div>
+    </div>
+    <div class="form-row"><label>Competition</label><input type="text" id="m-comp" placeholder="e.g. Leinster League, Cup…"></div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveMatch()">Save Fixture</button>
+    </div>
+  </div>
+ 
+  <!-- Result -->
+  <div id="modal-result" class="modal hidden">
+    <div class="modal-title">Record Result</div>
+    <input type="hidden" id="r-mid">
+    <div class="form-row"><label>Result</label>
+      <select id="r-res"><option value="win">Win</option><option value="loss">Loss</option><option value="draw">Draw</option><option value="no result">No result</option><option value="abandoned">Abandoned</option></select>
+    </div>
+    <div class="form-2col">
+      <div class="form-row"><label>Athlone CC score</label><input type="text" id="r-us" placeholder="e.g. 152/7 (20)"></div>
+      <div class="form-row"><label>Opponent score</label><input type="text" id="r-them" placeholder="e.g. 148/9 (20)"></div>
+    </div>
+    <div class="form-row"><label>Player of the match</label><select id="r-potm"><option value="">— none —</option></select></div>
+    <div class="form-row"><label>Match notes</label><textarea id="r-notes" rows="3" placeholder="Key moments, highlights…"></textarea></div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveResult()">Save Result</button>
+    </div>
+  </div>
+ 
+  <!-- Album -->
+  <div id="modal-album" class="modal hidden">
+    <div class="modal-title">Add Google Photos Album</div>
+    <div class="form-row"><label>Album name</label><input type="text" id="al-name" placeholder="e.g. Season 2025 Highlights"></div>
+    <div class="form-row">
+      <label>Google Photos share link</label>
+      <input type="text" id="al-url" placeholder="https://photos.google.com/share/...">
+      <div style="font-size:11px;color:#888;margin-top:5px;line-height:1.6;">
+        In Google Photos: open album → Share icon → Copy link. Set sharing to <strong>Anyone with the link</strong>.
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveAlbum()">Save Album</button>
+    </div>
+  </div>
+ 
+</div>
+ 
+<script>
+// ═══════════════════════════════════════════════════════════════
+// GOOGLE SHEETS CONFIG
+// Paste your Apps Script Web App URL below (keep the quotes).
+// Leave blank to disable syncing (app still works locally).
+// ═══════════════════════════════════════════════════════════════
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzkQUxZ4gDu9GqMjEzteSMcqNei3vC5g2B5WQxeCB7Wmmsjgnvco1LpXc82Yf14GQn3/exec';   // ← paste URL here, e.g. 'https://script.google.com/macros/s/ABC123/exec'
+ 
+// ── SYNC HELPERS ─────────────────────────────────────────────
+function setSyncStatus(state, msg) {
+  const el = document.getElementById('sync-status');
+  const dot = el.querySelector('.sync-dot');
+  const txt = document.getElementById('sync-text');
+  el.className = 'idle';
+  el.classList.add(state);
+  dot.className = 'sync-dot' + (state === 'syncing' ? ' pulse' : '');
+  txt.textContent = msg;
+  if (state === 'ok' || state === 'error') {
+    setTimeout(() => { el.className = 'idle'; dot.className = 'sync-dot'; txt.textContent = 'Sheets ready'; }, 3000);
+  }
+}
+ 
+async function syncToSheet(tab, headers, row) {
+  if (!SCRIPT_URL) return; // silently skip if not configured
+  setSyncStatus('syncing', 'Saving to Sheets…');
+  try {
+    await fetch(SCRIPT_URL, {
+      method: 'POST',
+      mode: 'no-cors',           // Apps Script requires no-cors
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ tab, headers, row })
+    });
+    // no-cors means we can't read the response; assume success if no exception
+    setSyncStatus('ok', '✓ Saved to Sheets');
+  } catch (err) {
+    setSyncStatus('error', '✗ Sync failed');
+    console.error('Sheets sync error:', err);
+  }
+}
+ 
+// ── LOCAL STORAGE ─────────────────────────────────────────────
+const K = { p:'acc_players', m:'acc_matches', r:'acc_results', s:'acc_selections', a:'acc_albums' };
+const ld = k => { try { return JSON.parse(localStorage.getItem(k)); } catch { return null; } };
+const sv = (k,v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch(e){} };
+ 
+let players    = ld(K.p) || [];
+let matches    = ld(K.m) || [];
+let results    = ld(K.r) || [];
+let selections = ld(K.s) || {};
+let albums     = ld(K.a) || [];
+ 
+let editPid = null, pFilter = 'all', activeAlbum = null;
+ 
+const uid  = () => Date.now().toString(36) + Math.random().toString(36).slice(2);
+const init = p => ((p.firstName[0]||'')+(p.lastName[0]||'')).toUpperCase();
+const full = p => p.firstName + ' ' + p.lastName;
+const todayStr = () => new Date().toISOString().slice(0,10);
+ 
+function fmtDate(d) {
+  if (!d) return '';
+  return new Date(d+'T12:00:00').toLocaleDateString('en-IE',{weekday:'short',day:'numeric',month:'short',year:'numeric'});
+}
+ 
+function roleClass(r) {
+  return {Batsman:'badge-blue',Bowler:'badge-green','All-Rounder':'badge-amber',Wicketkeeper:'badge-gray','Wicketkeeper-Batsman':'badge-purple'}[r]||'badge-gray';
+}
+ 
+function showPage(name, btn) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('page-'+name).classList.add('active');
+  if (btn) btn.classList.add('active');
+  ({players:renderPlayers,schedule:renderSchedule,selection:renderSelectionPage,results:renderResults,photos:renderPhotos})[name]?.();
+}
+ 
+function updateHeader() {
+  const t = todayStr();
+  const up = matches.filter(m => m.date >= t).length;
+  const won = results.filter(r => r.result==='win').length;
+  const played = results.filter(r => !['abandoned','no result'].includes(r.result)).length;
+  // Keep sync badge; update player/match counts alongside it
+  const statsEl = document.getElementById('header-stats');
+  // Only update the text node above the sync badge
+  let statsDiv = document.getElementById('header-counts');
+  if (!statsDiv) {
+    statsDiv = document.createElement('div');
+    statsDiv.id = 'header-counts';
+    statsDiv.style.cssText = 'font-size:12px;color:#888;text-align:right;line-height:1.6;margin-bottom:4px;';
+    statsEl.insertBefore(statsDiv, statsEl.firstChild);
+  }
+  statsDiv.innerHTML = `<div>${players.length} players &nbsp;·&nbsp; ${up} upcoming${played?'&nbsp;·&nbsp;'+won+'/'+played+' wins':''}</div>`;
+}
+ 
+// ── PLAYERS ──────────────────────────────────────────────
+function openAddPlayer() {
+  editPid = null;
+  document.getElementById('pm-title').textContent = 'Add Player';
+  ['p-first','p-last','p-notes'].forEach(id => document.getElementById(id).value='');
+  document.getElementById('p-role').value='Batsman';
+  document.getElementById('p-bat').value='';
+  document.getElementById('p-bowl').value='';
+  showModal('modal-player');
+}
+ 
+function openEditPlayer(id) {
+  const p = players.find(x=>x.id===id); if(!p) return;
+  editPid=id;
+  document.getElementById('pm-title').textContent='Edit Player';
+  document.getElementById('p-first').value=p.firstName;
+  document.getElementById('p-last').value=p.lastName;
+  document.getElementById('p-role').value=p.role;
+  document.getElementById('p-bat').value=p.batting||'';
+  document.getElementById('p-bowl').value=p.bowling||'';
+  document.getElementById('p-notes').value=p.notes||'';
+  showModal('modal-player');
+}
+ 
+function savePlayer() {
+  const first=document.getElementById('p-first').value.trim();
+  const last=document.getElementById('p-last').value.trim();
+  if(!first){alert('Please enter a first name.');return;}
+  const isNew = !editPid;
+  const d={
+    id:editPid||uid(),
+    firstName:first,lastName:last,
+    role:document.getElementById('p-role').value,
+    batting:document.getElementById('p-bat').value,
+    bowling:document.getElementById('p-bowl').value,
+    notes:document.getElementById('p-notes').value.trim(),
+    starred:editPid?(players.find(x=>x.id===editPid)?.starred||false):false,
+    savedAt: new Date().toISOString()
+  };
+  if(editPid){const i=players.findIndex(x=>x.id===editPid);players[i]=d;}else players.push(d);
+  sv(K.p,players);
+  closeModal();renderPlayers();updateHeader();
+ 
+  // Sync to Google Sheets (Players tab)
+  syncToSheet(
+    'Players',
+    ['ID','First Name','Last Name','Role','Batting Style','Bowling Style','Notes','Starred','Saved At'],
+    [d.id, d.firstName, d.lastName, d.role, d.batting||'', d.bowling||'', d.notes||'', d.starred?'Yes':'No', d.savedAt]
+  );
+}
+ 
+function deletePlayer(id) {
+  if(!confirm('Remove this player from the squad?'))return;
+  players=players.filter(x=>x.id!==id);sv(K.p,players);renderPlayers();updateHeader();
+}
+ 
+function toggleStar(id) {
+  const p=players.find(x=>x.id===id);
+  if(p){p.starred=!p.starred;sv(K.p,players);renderPlayers();}
+}
+ 
+function filterPlayers(f,btn) {
+  pFilter=f;
+  document.querySelectorAll('.sub-tab').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');renderPlayers();
+}
+ 
+function renderPlayers() {
+  let list=[...players];
+  if(pFilter==='starred')list=list.filter(p=>p.starred);
+  else if(pFilter!=='all')list=list.filter(p=>p.role===pFilter||(pFilter==='Wicketkeeper'&&p.role==='Wicketkeeper-Batsman'));
+  list.sort((a,b)=>(b.starred?1:0)-(a.starred?1:0)||a.lastName.localeCompare(b.lastName));
+  document.getElementById('squad-count').textContent=players.length+' player'+(players.length!==1?'s':'')+' in the squad';
+  const el=document.getElementById('players-list');
+  if(!list.length){el.innerHTML='<div class="empty-state">No players found.<br>Add your first player to get started.</div>';return;}
+  el.innerHTML=list.map(p=>`
+    <div class="player-card ${p.starred?'is-starred':''}">
+      <div class="avatar">${init(p)}</div>
+      <div style="flex:1;min-width:0;padding-right:24px;">
+        <div class="player-name">${full(p)}</div>
+        <div class="player-role">
+          <span class="badge ${roleClass(p.role)}">${p.role}</span>
+          ${p.batting?'<span style="font-size:11px;color:#888;margin-left:4px;">· '+p.batting+'</span>':''}
+          ${p.bowling?'<span style="font-size:11px;color:#888;margin-left:4px;">· '+p.bowling+'</span>':''}
+        </div>
+        ${p.notes?'<div style="font-size:11px;color:#888;margin-top:4px;">'+p.notes+'</div>':''}
+        <div class="player-actions">
+          <button class="btn btn-sm" onclick="openEditPlayer('${p.id}')">Edit</button>
+          <button class="btn btn-sm btn-danger" onclick="deletePlayer('${p.id}')">Remove</button>
+        </div>
+      </div>
+      <button class="star-btn ${p.starred?'starred':''}" onclick="toggleStar('${p.id}')" title="${p.starred?'Unstar':'Star player'}">${p.starred?'★':'☆'}</button>
+    </div>`).join('');
+  updateHeader();
+}
+ 
+// ── SCHEDULE ─────────────────────────────────────────────
+function openAddMatch() {
+  ['m-opp','m-venue','m-comp'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('m-date').value='';
+  document.getElementById('m-format').value='20 overs';
+  document.getElementById('m-ha').value='Home';
+  showModal('modal-match');
+}
+ 
+function saveMatch() {
+  const opp=document.getElementById('m-opp').value.trim();
+  const date=document.getElementById('m-date').value;
+  if(!opp||!date){alert('Please enter opponent and date.');return;}
+  const d={
+    id:uid(),opponent:opp,date,
+    format:document.getElementById('m-format').value,
+    venue:document.getElementById('m-venue').value.trim(),
+    homeaway:document.getElementById('m-ha').value,
+    competition:document.getElementById('m-comp').value.trim(),
+    savedAt: new Date().toISOString()
+  };
+  matches.push(d);
+  matches.sort((a,b)=>a.date.localeCompare(b.date));
+  sv(K.m,matches);closeModal();renderSchedule();updateHeader();
+ 
+  // Sync to Google Sheets (Fixtures tab)
+  syncToSheet(
+    'Fixtures',
+    ['ID','Opponent','Date','Format','Venue','Home/Away','Competition','Saved At'],
+    [d.id, d.opponent, d.date, d.format, d.venue||'', d.homeaway, d.competition||'', d.savedAt]
+  );
+}
+ 
+function deleteMatch(id) {
+  if(!confirm('Remove this fixture?'))return;
+  matches=matches.filter(x=>x.id!==id);results=results.filter(x=>x.matchId!==id);delete selections[id];
+  sv(K.m,matches);sv(K.r,results);sv(K.s,selections);renderSchedule();updateHeader();
+}
+ 
+function renderSchedule() {
+  const t=todayStr();
+  const up=matches.filter(m=>m.date>=t).sort((a,b)=>a.date.localeCompare(b.date));
+  const past=matches.filter(m=>m.date<t).sort((a,b)=>b.date.localeCompare(a.date));
+  const card=m=>{
+    const r=results.find(x=>x.matchId===m.id);
+    const sel=selections[m.id]||[];
+    const selBadge=sel.length?`<span class="badge badge-gray" style="margin-left:6px;">${sel.length} selected</span>`:'';
+    let rHtml='';
+    if(r){
+      const cls=r.result==='win'?'badge-green':r.result==='loss'?'':'badge-gray';
+      const sty=r.result==='loss'?'background:#fdf0ee;color:#c0392b;':'';
+      rHtml=`<div style="margin-top:6px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+        <span class="badge ${cls}" style="${sty}">${r.result.charAt(0).toUpperCase()+r.result.slice(1)}</span>
+        ${r.ourScore?'<span style="font-size:12px;color:#888">ACC '+r.ourScore+(r.theirScore?' | Opp '+r.theirScore:'')+'</span>':''}
+      </div>`;
+    }
+    return `<div class="match-card">
+      <div style="flex:1;min-width:0;">
+        <div class="match-opponent">vs ${m.opponent} ${selBadge}</div>
+        <div class="match-meta">${fmtDate(m.date)} · ${m.homeaway} · ${m.format}${m.venue?' · '+m.venue:''}${m.competition?' · <em>'+m.competition+'</em>':''}</div>
+        ${rHtml}
+      </div>
+      <div class="match-actions">
+        <button class="btn btn-sm" onclick="openResultModal('${m.id}')">📋 ${r?'Edit result':'Result'}</button>
+        <button class="btn btn-sm btn-danger" onclick="deleteMatch('${m.id}')">✕</button>
+      </div>
+    </div>`;
+  };
+  document.getElementById('upcoming-matches').innerHTML=up.length?up.map(card).join(''):'<div style="color:#aaa;font-size:13px;padding:4px 0;">No upcoming fixtures scheduled.</div>';
+  document.getElementById('past-matches').innerHTML=past.length?past.map(card).join(''):'<div style="color:#aaa;font-size:13px;padding:4px 0;">No past fixtures yet.</div>';
+}
+ 
+// ── RESULT MODAL ─────────────────────────────────────────
+function openResultModal(mid) {
+  const r=results.find(x=>x.matchId===mid);
+  document.getElementById('r-mid').value=mid;
+  document.getElementById('r-res').value=r?.result||'win';
+  document.getElementById('r-us').value=r?.ourScore||'';
+  document.getElementById('r-them').value=r?.theirScore||'';
+  document.getElementById('r-notes').value=r?.notes||'';
+  const sel=(selections[mid]||[]).map(id=>players.find(p=>p.id===id)).filter(Boolean);
+  const opts=(sel.length?sel:players).sort((a,b)=>a.lastName.localeCompare(b.lastName));
+  document.getElementById('r-potm').innerHTML='<option value="">— none —</option>'+opts.map(p=>`<option value="${p.id}" ${r?.potm===p.id?'selected':''}>${full(p)}</option>`).join('');
+  showModal('modal-result');
+}
+ 
+function saveResult() {
+  const mid=document.getElementById('r-mid').value;
+  const match=matches.find(m=>m.id===mid);
+  const potmId=document.getElementById('r-potm').value;
+  const potmPlayer=potmId?players.find(p=>p.id===potmId):null;
+  const d={
+    id:uid(),matchId:mid,
+    result:document.getElementById('r-res').value,
+    ourScore:document.getElementById('r-us').value.trim(),
+    theirScore:document.getElementById('r-them').value.trim(),
+    potm:potmId,
+    notes:document.getElementById('r-notes').value.trim(),
+    savedAt: new Date().toISOString()
+  };
+  const i=results.findIndex(x=>x.matchId===mid);
+  if(i>=0)results[i]=d;else results.push(d);
+  sv(K.r,results);closeModal();renderSchedule();renderResults();updateHeader();
+ 
+  // Sync to Google Sheets (Results tab)
+  syncToSheet(
+    'Results',
+    ['ID','Match ID','Date','Opponent','Result','Athlone Score','Opponent Score','Player of Match','Notes','Saved At'],
+    [
+      d.id, d.matchId,
+      match?.date||'', match?.opponent||'',
+      d.result, d.ourScore||'', d.theirScore||'',
+      potmPlayer?full(potmPlayer):'',
+      d.notes||'', d.savedAt
+    ]
+  );
+}
+ 
+// ── SELECTION ────────────────────────────────────────────
+function renderSelectionPage() {
+  const t=todayStr();
+  const up=matches.filter(m=>m.date>=t).sort((a,b)=>a.date.localeCompare(b.date));
+  const sel=document.getElementById('sel-fixture');
+  const prev=sel.value;
+  sel.innerHTML='<option value="">— select a fixture —</option>'+up.map(m=>`<option value="${m.id}" ${m.id===prev?'selected':''}>${fmtDate(m.date)} · vs ${m.opponent}</option>`).join('');
+  if(!up.length)sel.innerHTML='<option value="">No upcoming fixtures</option>';
+  if(prev&&up.find(m=>m.id===prev))loadSelection();
+  else document.getElementById('sel-panel').classList.add('hidden');
+}
+ 
+function loadSelection() {
+  const mid=document.getElementById('sel-fixture').value;
+  if(!mid){document.getElementById('sel-panel').classList.add('hidden');return;}
+  document.getElementById('sel-panel').classList.remove('hidden');
+  const sel=selections[mid]||[];
+  renderSelList(mid,sel);renderSelSummary(mid,sel);
+}
+ 
+function renderSelList(mid,sel) {
+  const sorted=[...players].sort((a,b)=>(b.starred?1:0)-(a.starred?1:0)||a.role.localeCompare(b.role)||a.lastName.localeCompare(b.lastName));
+  document.getElementById('sel-list').innerHTML=sorted.map(p=>`
+    <label class="player-check">
+      <input type="checkbox" value="${p.id}" ${sel.includes(p.id)?'checked':''} onchange="onSelChange('${mid}')">
+      <div class="avatar" style="width:30px;height:30px;min-width:30px;font-size:12px;">${init(p)}</div>
+      <div style="flex:1;">
+        <span style="font-weight:500">${full(p)}</span>
+        ${p.starred?'<span style="color:#EF9F27;font-size:14px;margin-left:4px;">★</span>':''}
+        <span class="badge ${roleClass(p.role)}" style="margin-left:6px;">${p.role}</span>
+      </div>
+    </label>`).join('');
+  updateSelCount();
+}
+ 
+function onSelChange(mid){updateSelCount();renderSelSummary(mid,getChecked());}
+function getChecked(){return[...document.querySelectorAll('#sel-list input[type=checkbox]:checked')].map(i=>i.value);}
+ 
+function updateSelCount() {
+  const n=getChecked().length;
+  const el=document.getElementById('sel-count');
+  el.textContent=n+' / 11 selected';
+  el.style.color=n===11?'#1a7a50':n>11?'#c0392b':'#888';
+}
+ 
+function renderSelSummary(mid,sel) {
+  if(!sel.length){document.getElementById('sel-summary').innerHTML='';return;}
+  const selP=sel.map(id=>players.find(p=>p.id===id)).filter(Boolean);
+  const byRole={};selP.forEach(p=>{byRole[p.role]=(byRole[p.role]||0)+1;});
+  document.getElementById('sel-summary').innerHTML=`<div class="card" style="padding:12px 14px;">
+    <div style="font-size:12px;font-weight:600;margin-bottom:8px;color:#888;">Selected XI</div>
+    <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px;">${selP.map(p=>`<span class="badge badge-gray">${full(p)}</span>`).join('')}</div>
+    <div style="display:flex;gap:12px;flex-wrap:wrap;font-size:12px;color:#888;">${Object.entries(byRole).map(([r,n])=>`<span>${n} ${r}${n>1?'s':''}</span>`).join('')}</div>
+  </div>`;
+}
+ 
+function saveSelection() {
+  const mid=document.getElementById('sel-fixture').value;if(!mid)return;
+  const sel=getChecked();
+  selections[mid]=sel;sv(K.s,selections);
+  renderSelSummary(mid,sel);
+ 
+  const match=matches.find(m=>m.id===mid);
+  const selNames=sel.map(id=>players.find(p=>p.id===id)).filter(Boolean).map(full);
+ 
+  // Sync to Google Sheets (Selections tab) — one row per selection save
+  syncToSheet(
+    'Selections',
+    ['Match ID','Date','Opponent','Selected Players','Player Count','Saved At'],
+    [mid, match?.date||'', match?.opponent||'', selNames.join(', '), sel.length, new Date().toISOString()]
+  );
+ 
+  const btn=document.getElementById('save-sel-btn');
+  btn.textContent='✓ Saved!';setTimeout(()=>btn.textContent='Save Selection',1800);
+}
+ 
+function clearSelection() {
+  document.querySelectorAll('#sel-list input[type=checkbox]').forEach(i=>i.checked=false);
+  updateSelCount();const mid=document.getElementById('sel-fixture').value;if(mid)renderSelSummary(mid,[]);
+}
+ 
+// ── RESULTS ──────────────────────────────────────────────
+function renderResults() {
+  const played=results.filter(r=>!['abandoned','no result'].includes(r.result));
+  const won=results.filter(r=>r.result==='win').length;
+  const lost=results.filter(r=>r.result==='loss').length;
+  const drawn=results.filter(r=>r.result==='draw').length;
+  const pct=played.length?Math.round(won/played.length*100):0;
+  document.getElementById('stats-grid').innerHTML=[['Played',played.length],['Won',won],['Lost',lost],['Drawn',drawn],['Win %',pct+'%']].map(([l,v])=>`<div class="stat-card"><div class="stat-val">${v}</div><div class="stat-label">${l}</div></div>`).join('');
+  const sorted=[...results].map(r=>({...r,match:matches.find(m=>m.id===r.matchId)})).filter(r=>r.match).sort((a,b)=>b.match.date.localeCompare(a.match.date));
+  const tbody=document.getElementById('results-tbody');
+  if(!sorted.length){tbody.innerHTML='<tr><td colspan="8" style="text-align:center;color:#aaa;padding:24px;">No results recorded yet.</td></tr>';return;}
+  tbody.innerHTML=sorted.map(r=>{
+    const cls=r.result==='win'?'result-win':r.result==='loss'?'result-loss':'result-draw';
+    const potmP=r.potm?players.find(p=>p.id===r.potm):null;
+    return`<tr>
+      <td style="white-space:nowrap">${fmtDate(r.match.date)}</td>
+      <td>${r.match.opponent}</td>
+      <td>${r.match.venue||'—'}</td>
+      <td class="${cls}">${r.result.charAt(0).toUpperCase()+r.result.slice(1)}</td>
+      <td style="font-size:12px;white-space:nowrap">${r.ourScore||'—'}${r.theirScore?' / '+r.theirScore:''}</td>
+      <td style="font-size:12px">${potmP?'⭐ '+full(potmP):'—'}</td>
+      <td style="font-size:12px;color:#888;">${r.notes||''}</td>
+      <td><button class="btn btn-sm" onclick="openResultModal('${r.matchId}')">Edit</button></td>
+    </tr>`;}).join('');
+}
+ 
+// ── PHOTOS ───────────────────────────────────────────────
+function openAddAlbum(){document.getElementById('al-name').value='';document.getElementById('al-url').value='';showModal('modal-album');}
+ 
+function saveAlbum() {
+  const name=document.getElementById('al-name').value.trim();
+  const url=document.getElementById('al-url').value.trim();
+  if(!name){alert('Please enter an album name.');return;}
+  const d={id:uid(),name,url,savedAt:new Date().toISOString()};
+  albums.push(d);sv(K.a,albums);closeModal();renderPhotos();
+ 
+  // Sync to Google Sheets (Albums tab)
+  syncToSheet(
+    'Albums',
+    ['ID','Album Name','URL','Saved At'],
+    [d.id, d.name, d.url||'', d.savedAt]
+  );
+}
+ 
+function deleteAlbum(id) {
+  if(!confirm('Remove this album?'))return;
+  albums=albums.filter(a=>a.id!==id);if(activeAlbum===id)activeAlbum=null;sv(K.a,albums);renderPhotos();
+}
+ 
+function viewAlbum(id){activeAlbum=id;renderPhotos();}
+ 
+function renderPhotos() {
+  const grid=document.getElementById('albums-grid');
+  const viewer=document.getElementById('album-viewer');
+  if(!albums.length){
+    grid.innerHTML='';
+    viewer.innerHTML='<div class="empty-state"><div style="font-size:36px;margin-bottom:12px;">📷</div><div style="font-weight:600;margin-bottom:6px;">No albums yet</div><div style="font-size:13px;">Add a Google Photos public share link to display your club photos here.</div></div>';
+    return;
+  }
+  grid.innerHTML=albums.map(a=>`
+    <div class="card" style="cursor:pointer;transition:border-color .15s;${activeAlbum===a.id?'border-color:#1a1a18;':''}" onclick="viewAlbum('${a.id}')">
+      <div style="font-size:26px;margin-bottom:8px;">📷</div>
+      <div style="font-weight:600;font-size:14px;margin-bottom:4px;">${a.name}</div>
+      <div style="font-size:11px;color:#888;word-break:break-all;margin-bottom:10px;">${a.url?a.url.slice(0,45)+'…':'No URL set'}</div>
+      <div style="display:flex;gap:6px;">
+        <button class="btn btn-sm" onclick="event.stopPropagation();viewAlbum('${a.id}')">View</button>
+        <button class="btn btn-sm btn-danger" onclick="event.stopPropagation();deleteAlbum('${a.id}')">Remove</button>
+      </div>
+    </div>`).join('');
+  if(!activeAlbum){viewer.innerHTML='<div style="color:#aaa;font-size:13px;padding:8px 0;">Click an album above to view it.</div>';return;}
+  const al=albums.find(a=>a.id===activeAlbum);
+  if(!al){viewer.innerHTML='';return;}
+  viewer.innerHTML=`
+    <div style="margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+      <div style="font-weight:600;font-size:15px;">📷 ${al.name}</div>
+      ${al.url?`<a href="${al.url}" target="_blank" class="btn btn-sm">Open in Google Photos ↗</a>`:''}
+    </div>
+    <div class="album-frame">
+      ${al.url
+        ?`<iframe src="${al.url}" width="100%" height="520" frameborder="0" allowfullscreen style="display:block;border:none;" loading="lazy"></iframe>`
+        :`<div class="album-placeholder"><div style="font-size:32px;">🔗</div><div>No URL set for this album.</div></div>`}
+    </div>
+    ${al.url?'<div style="margin-top:8px;font-size:11px;color:#aaa;">If the album does not load, open it directly via the button above. Ensure sharing is set to "Anyone with the link".</div>':''}`;
+}
+ 
+// ── MODAL ────────────────────────────────────────────────
+function showModal(id){document.querySelectorAll('.modal').forEach(m=>m.classList.add('hidden'));document.getElementById('modal-bg').classList.remove('hidden');document.getElementById(id).classList.remove('hidden');}
+function closeModal(){document.getElementById('modal-bg').classList.add('hidden');document.querySelectorAll('.modal').forEach(m=>m.classList.add('hidden'));}
+function bgClose(e){if(e.target===document.getElementById('modal-bg'))closeModal();}
+ 
+// ── INIT ─────────────────────────────────────────────────
+if (!SCRIPT_URL) document.getElementById('config-banner').classList.remove('hidden');
+renderPlayers();
+updateHeader();
+</script>
+</body>
+</html>
