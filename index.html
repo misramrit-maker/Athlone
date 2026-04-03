@@ -1117,6 +1117,7 @@ function savePlayer() {
 function deletePlayer(id) {
   if(!confirm('Remove this player from the squad?'))return;
   players=players.filter(x=>x.id!==id);sv(K.p,players);renderPlayers();updateHeader();
+  syncDeleteToSheet('Players', 'ID', id);
 }
 
 function toggleStar(id) {
@@ -1609,6 +1610,24 @@ function resolveSelections(rawSel, loadedPlayers) {
 }
 
 
+
+async function syncDeleteToSheet(tab, keyCol, keyVal) {
+  if (!SCRIPT_URL) return;
+  setSyncStatus('syncing', 'Deleting...');
+  try {
+    await fetch(SCRIPT_URL, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'delete', tab, keyCol, keyVal })
+    });
+    setSyncStatus('ok', 'Deleted');
+  } catch(err) {
+    setSyncStatus('error', 'Delete failed');
+    console.error('Sheet delete error:', err);
+  }
+}
+
 async function loadFromSheets() {
   // Render local data immediately — app works without Sheets
   renderPlayers(); updateHeader(); renderFixedSchedule(); renderPractice();
@@ -2059,6 +2078,8 @@ function deletePracticeSession(id) {
   practiceSessions = practiceSessions.filter(x => x.id !== id);
   sv('acc_practice', practiceSessions);
   renderPractice();
+  // Sync deletion to Google Sheets
+  syncDeleteToSheet('Practice', 'ID', id);
 }
 
 function openAttendModal(id) {
