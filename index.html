@@ -1428,15 +1428,7 @@ function rowsToMatches(rows) {
   // headers: ID, Opponent, Date, Format, Venue, Home/Away, Competition, Saved At
   return rows.slice(1).map(r => {
     // Normalise date — could be ISO string, Date object, or YYYY-MM-DD
-    var rawDate = r[2];
-    var dateStr = '';
-    if (rawDate) {
-      if (rawDate instanceof Date) {
-        dateStr = rawDate.toISOString().slice(0,10);
-      } else {
-        dateStr = String(rawDate).slice(0,10);
-      }
-    }
+    var dateStr = parseSheetDate(r[2]);
     return {
       id: String(r[0]), opponent: String(r[1]||''), date: dateStr,
       format: String(r[3]||''), venue: String(r[4]||''), homeaway: String(r[5]||''),
@@ -1483,6 +1475,68 @@ function rowsToAvailability(rows) {
   return avail;
 }
 
+function parseSheetDate(val) {
+  // Handles: JS Date object, ISO string, decimal serial, YYYY-MM-DD string
+  // IMPORTANT: Always use UTC methods to avoid timezone shift (e.g. Apr 5 UTC -> Apr 4 local)
+  if (!val && val !== 0) return '';
+  if (typeof val === 'number') {
+    // Google Sheets date serial: days since 1899-12-30
+    // Use UTC to avoid local timezone shifting the date
+    const d = new Date((val - 25569) * 86400 * 1000);
+    const y = d.getUTCFullYear();
+    const m = String(d.getUTCMonth() + 1).padStart(2,'0');
+    const day = String(d.getUTCDate()).padStart(2,'0');
+    return y + '-' + m + '-' + day;
+  }
+  const s = String(val).trim();
+  if (!s || s === 'undefined') return '';
+  // Already YYYY-MM-DD — return as-is, no conversion needed
+  if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
+  // ISO datetime string e.g. "2026-04-04T23:00:00.000Z" (Sheets stores Irish midnight as 23:00 UTC)
+  // Fix: add 12 hours before extracting date so any timezone offset is safely absorbed
+  if (s.includes('T')) {
+    const d = new Date(new Date(s).getTime() + 12 * 60 * 60 * 1000);
+    if (!isNaN(d)) {
+      const y = d.getUTCFullYear();
+      const m = String(d.getUTCMonth() + 1).padStart(2,'0');
+      const day = String(d.getUTCDate()).padStart(2,'0');
+      return y + '-' + m + '-' + day;
+    }
+  }
+  // Date-only string like "Thu Apr 05 2026"
+  const d = new Date(new Date(s).getTime() + 12 * 60 * 60 * 1000);
+  if (!isNaN(d)) {
+    const y = d.getUTCFullYear();
+    const m = String(d.getUTCMonth() + 1).padStart(2,'0');
+    const day = String(d.getUTCDate()).padStart(2,'0');
+    return y + '-' + m + '-' + day;
+  }
+  return s.slice(0,10);
+}
+
+function parseSheetTime(val) {
+  if (!val && val !== 0) return '';
+  if (typeof val === 'number') {
+    // Decimal fraction e.g. 0.5208 = 12:30
+    const totalMins = Math.round(val * 24 * 60);
+    const hr = Math.floor(totalMins / 60) % 24;
+    const mn = totalMins % 60;
+    return String(hr).padStart(2,'0') + ':' + String(mn).padStart(2,'0');
+  }
+  const s = String(val).trim();
+  if (!s || s === 'undefined') return '';
+  // ISO datetime - extract time part
+  if (s.includes('T')) {
+    const d = new Date(s);
+    if (!isNaN(d)) {
+      return String(d.getUTCHours()).padStart(2,'0') + ':' + String(d.getUTCMinutes()).padStart(2,'0');
+    }
+  }
+  // Already HH:MM
+  if (/^\d{1,2}:\d{2}/.test(s)) return s.slice(0,5);
+  return s;
+}
+
 function rowsToPractice(rows) {
   if (!rows || rows.length < 2) return [];
   // headers: ID, Date, Time, Venue, Notes, Attendees, Saved At
@@ -1492,8 +1546,8 @@ function rowsToPractice(rows) {
     if (!id) return;
     // Last row per ID wins (most recent sync)
     sessions[id] = {
-      id, date: String(r[1]||'').slice(0,10),
-      time: String(r[2]||''), venue: String(r[3]||''),
+      id, date: parseSheetDate(r[1]),
+      time: parseSheetTime(r[2]), venue: String(r[3]||''),
       notes: String(r[4]||''),
       attendees: r[5] ? String(r[5]).split(', ').filter(Boolean) : [],
       savedAt: String(r[6]||'')
@@ -1504,19 +1558,35 @@ function rowsToPractice(rows) {
 
 function rowsToKit(rows) {
   if (!rows || rows.length < 2) return {};
-  // headers: Team, Item, Quantity, Condition, Updated At
-  const kit = {};
   const keyMap = {
     'Bats':'bats','Balls':'balls','Pads':'pads','Batting Gloves':'gloves',
     'WK Gloves':'wk_gloves','Helmets':'helmet','AB Guards':'ab_guard','Thigh Pads':'thigh_pad'
   };
+  // Use header row to find column positions dynamically
+  const headers = rows[0].map(h => String(h||'').trim());
+  const col = name => headers.indexOf(name);
+  const iTeam = col('Team'), iItem = col('Item'), iQty = col('Quantity');
+  const iCond = col('Condition'), iDate = col('Updated At');
+
+  // Fallback to positional if headers not found
+  const getCol = (r, idx, fallback) => idx >= 0 ? r[idx] : r[fallback];
+
+  const kit = {};
   rows.slice(1).forEach(r => {
-    const team = String(r[0]||'');
-    const itemLabel = String(r[1]||'');
+    const team = String(getCol(r, iTeam, 0)||'').trim();
+    const itemLabel = String(getCol(r, iItem, 1)||'').trim();
     const key = keyMap[itemLabel];
     if (!team || !key) return;
     if (!kit[team]) kit[team] = {};
-    kit[team][key] = { qty: r[2]!==''?parseInt(r[2]):undefined, cond: String(r[3]||''), date: String(r[4]||'') };
+    const qtyRaw = getCol(r, iQty, 2);
+    const qty = (qtyRaw !== '' && qtyRaw !== null && qtyRaw !== undefined) ? parseInt(qtyRaw) : undefined;
+    const cond = String(getCol(r, iCond, 3)||'').trim();
+    const date = String(getCol(r, iDate, 4)||'').trim();
+    // Only update if this row is newer than existing entry
+    const existing = kit[team][key];
+    if (!existing || !existing.date || date >= existing.date) {
+      kit[team][key] = { qty, cond, date };
+    }
   });
   return kit;
 }
@@ -2052,10 +2122,44 @@ function removeAttendee(name) {
 }
 
 function fmtTime(t) {
-  if (!t) return '';
-  const [h, m] = t.split(':');
-  const hr = parseInt(h);
-  return (hr > 12 ? hr - 12 : hr || 12) + ':' + m + (hr >= 12 ? ' PM' : ' AM');
+  if (!t && t !== 0) return '';
+  // Normalise via parseSheetTime first, then format for display
+  const normalised = parseSheetTime(t);
+  if (!normalised) return '';
+  t = normalised;
+  // Google Sheets returns time as a decimal fraction (e.g. 0.5 = 12:00)
+  // or as a Date object serialised to a string like "1899-12-30T12:30:00.000Z"
+  // or as a plain "HH:MM" string saved by the app
+  if (typeof t === 'number') {
+    // Decimal fraction: 0.5 = 12:00, 0.75 = 18:00
+    const totalMins = Math.round(t * 24 * 60);
+    const hr = Math.floor(totalMins / 60) % 24;
+    const mn = totalMins % 60;
+    const ampm = hr >= 12 ? 'PM' : 'AM';
+    const h12 = hr % 12 || 12;
+    return h12 + ':' + String(mn).padStart(2,'0') + ' ' + ampm;
+  }
+  const s = String(t);
+  // ISO date-time string from Sheets e.g. "1899-12-30T12:30:00.000Z"
+  if (s.includes('T')) {
+    const d = new Date(s);
+    if (!isNaN(d)) {
+      const hr = d.getUTCHours(), mn = d.getUTCMinutes();
+      const ampm = hr >= 12 ? 'PM' : 'AM';
+      return (hr % 12 || 12) + ':' + String(mn).padStart(2,'0') + ' ' + ampm;
+    }
+  }
+  // Plain HH:MM string saved by the app
+  if (s.includes(':')) {
+    const parts = s.split(':');
+    const hr = parseInt(parts[0]);
+    const mn = parts[1] ? parts[1].slice(0,2) : '00';
+    if (!isNaN(hr)) {
+      const ampm = hr >= 12 ? 'PM' : 'AM';
+      return (hr % 12 || 12) + ':' + mn + ' ' + ampm;
+    }
+  }
+  return s;
 }
 
 function practiceCard(s, isPast) {
