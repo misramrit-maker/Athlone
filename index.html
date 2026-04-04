@@ -582,6 +582,50 @@
   }
   .lightbox-close:hover { opacity: 1; }
 
+
+  /* Kit side-by-side grid */
+  .kit-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    align-items: start;
+  }
+  @media(max-width: 640px) {
+    .kit-grid { grid-template-columns: 1fr; }
+  }
+  .kit-team-col {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+  .kit-team-header {
+    display: flex; align-items: center; gap: 6px;
+    padding: 8px 10px;
+    background: var(--surface2);
+    border-bottom: 1px solid var(--border);
+    flex-wrap: wrap;
+  }
+  .kit-team-updated { font-size: 10px; color: var(--text3); flex: 1; text-align: right; }
+  .kit-edit-btn {
+    font-size: 11px; padding: 2px 8px;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 4px; cursor: pointer; color: var(--text);
+  }
+  .kit-edit-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .kit-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  .kit-table th {
+    padding: 5px 8px; text-align: left;
+    font-size: 10px; text-transform: uppercase; letter-spacing: .04em;
+    color: var(--text3); border-bottom: 1px solid var(--border);
+    background: var(--surface2);
+  }
+  .kit-table td { padding: 5px 8px; border-bottom: 1px solid var(--border); }
+  .kit-table tr:last-child td { border-bottom: none; }
+  .kit-table tr.k-good td:first-child { border-left: 3px solid var(--accent); }
+  .kit-table tr.k-fair td:first-child { border-left: 3px solid #f59e0b; }
+  .kit-table tr.k-needs td:first-child { border-left: 3px solid #ef4444; }
+
 </style>
 </head>
 <body>
@@ -1296,6 +1340,15 @@ function saveResult() {
   );
 }
 
+function deleteResult(id) {
+  if (!confirm('Delete this result?')) return;
+  results = results.filter(function(x) { return x.id !== id; });
+  sv(K.r, results);
+  renderResults();
+  updateHeader();
+  syncDeleteToSheet('Results', 'ID', id);
+}
+
 // ââ SELECTION ââââââââââââââââââââââââââââââââââââââââââââ
 function renderSelectionPage() {
   const t=todayStr();
@@ -1394,7 +1447,20 @@ function renderResults() {
 
   allFixtures.sort(function(a,b) { return b.date.localeCompare(a.date); });
 
-  var filtered = resultsTeam === 'all' ? allFixtures : allFixtures.filter(function(f) { return f.team === resultsTeam; });
+  // For team tabs: show fixtures of that team, PLUS any results tagged with that team
+  // that may be from fixtures not in the fixed schedule
+  var filtered;
+  if (resultsTeam === 'all') {
+    filtered = allFixtures;
+  } else {
+    // Get fixture IDs that have results saved under this team
+    var resultMatchIds = results
+      .filter(function(r) { return r.team === resultsTeam; })
+      .map(function(r) { return r.matchId; });
+    filtered = allFixtures.filter(function(f) {
+      return f.team === resultsTeam || resultMatchIds.includes(f.id);
+    });
+  }
 
   var recordedResults = resultsTeam === 'all' ? results : results.filter(function(r) { return r.team === resultsTeam; });
   var played  = recordedResults.filter(function(r) { return ['win','loss','draw'].includes(r.result); });
@@ -1420,7 +1486,8 @@ function renderResults() {
   var resultLabels = { win:'Won', loss:'Lost', draw:'Draw', 'washed out':'Washed Out', 'no result':'No Result', 'abandoned':'Abandoned' };
 
   tbody.innerHTML = filtered.map(function(f) {
-    var r = results.find(function(x) { return x.matchId === f.id; });
+    var r = results.find(function(x) { return x.matchId === f.id; }) ||
+             results.find(function(x) { return x.matchId === f.id && x.team === f.team; });
     var potmP = r && r.potm ? players.find(function(p) { return p.id === r.potm; }) : null;
     var teamCls = f.team === 'Team 1' ? 'team-1' : f.team === 'Team 2' ? 'team-2' : f.team === 'Team 3' ? 'team-3' : f.team === 'Women' ? 'badge-purple' : 'sched-tag-fr';
 
@@ -1539,12 +1606,23 @@ function rowsToMatches(rows) {
 
 function rowsToResults(rows) {
   if (!rows || rows.length < 2) return [];
-  // headers: ID, Match ID, Date, Opponent, Result, Athlone Score, Opponent Score, Player of Match, Notes, Saved At
+  // Use header row to find columns dynamically — handles old and new column layouts
+  const headers = rows[0].map(h => String(h||'').trim());
+  const col = name => headers.indexOf(name);
+  const get = (r, name, fallback) => {
+    const i = col(name);
+    return i >= 0 ? String(r[i]||'') : String(r[fallback]||'');
+  };
   return rows.slice(1).map(r => ({
-    id: String(r[0]), matchId: String(r[1]||''), result: String(r[4]||''),
-    ourScore: String(r[5]||''), theirScore: String(r[6]||''),
-    potm: '', potmName: String(r[7]||''),
-    notes: String(r[8]||''), savedAt: String(r[9]||'')
+    id:        get(r, 'ID', 0),
+    matchId:   get(r, 'Match ID', 1),
+    team:      get(r, 'Team', 4),
+    result:    get(r, 'Result', 5),
+    ourScore:  get(r, 'Athlone Score', 6),
+    theirScore:get(r, 'Opponent Score', 7),
+    stars:     get(r, 'Star Performers', 8),
+    notes:     get(r, 'Summary', 9),
+    savedAt:   get(r, 'Saved At', 10)
   })).filter(r => r.id && r.matchId);
 }
 
@@ -1771,7 +1849,7 @@ function processSheetData(json) {
       sv(K.s, selections);
       updated = true;
     }
-    if (updated) { renderPlayers(); updateHeader(); renderFixedSchedule(); renderPractice(); renderThisWeek(); }
+    if (updated) { renderPlayers(); updateHeader(); renderFixedSchedule(); renderPractice(); renderThisWeek(); renderResults(); }
     setSyncStatus('ok', 'Sheets synced');
   } else {
     setSyncStatus('idle', 'Offline');
@@ -1889,40 +1967,45 @@ function kitTeamUpdated(team){
   const dates=KIT_ITEMS.map(i=>td[i.key]?.date).filter(Boolean);
   return dates.length?new Date(Math.max(...dates.map(d=>new Date(d)))).toLocaleDateString("en-IE",{day:"numeric",month:"short",year:"numeric"}):null;
 }
-function renderKit(){
-  const teams=["Athlone 1","Athlone 2","Athlone 3"];
-  const container=document.getElementById("kit-teams-list");
-  container.innerHTML=teams.map(team=>{
-    const td=kitData[team]||{};
-    const updated=kitTeamUpdated(team);
-    const hasData=Object.keys(td).length>0;
-    const teamCls=team==="Athlone 1"?"team-1":team==="Athlone 2"?"team-2":"team-3";
-    const rows=hasData
-      ?KIT_ITEMS.map(item=>{
-          const d=td[item.key]||{};
-          const qty=d.qty!==undefined?d.qty:"&mdash;";
-          const ds=d.date?new Date(d.date).toLocaleDateString("en-IE",{day:"numeric",month:"short",year:"numeric"}):"";
-          return '<div class="kit-list-row '+kitCondClass(d.cond||'')+'">'
-            +'<div class="kit-list-icon">'+item.icon+'</div>'
-            +'<div class="kit-list-name">'+item.label+'</div>'
-            +(d.cond?'<div>'+kitCondBadge(d.cond)+'</div>':'<div></div>')
-            +'<div style="text-align:right;">'
-              +'<div class="kit-list-qty">'+qty+'</div>'
-              +'<div class="kit-list-qty-label">qty</div>'
-            +'</div>'
-            +(ds?'<div class="kit-list-date">'+ds+'</div>':'')
-            +'</div>';
-        }).join("")
-      :'<div class="kit-empty">No kit recorded yet. Click Edit to add.</div>';
-    return '<div class="kit-team-block">'
-      +'<div class="kit-team-header">'
-        +'<div class="kit-team-title"><span class="team-pill '+teamCls+'" style="font-size:12px;padding:2px 10px;margin-right:8px;">'+team+'</span></div>'
-        +(updated?'<span class="kit-team-updated">Updated '+updated+'</span>':'')
-        +'<button class="kit-edit-btn" onclick="openKitModal(\''+team+'\')">&nbsp;Edit&nbsp;</button>'
-      +'</div>'
-      +rows
-      +'</div>';
-  }).join("");
+function renderKit() {
+  const teams = ['Athlone 1', 'Athlone 2', 'Athlone 3'];
+  const container = document.getElementById('kit-teams-list');
+
+  container.innerHTML = '<div class="kit-grid">' + teams.map(team => {
+    const td = kitData[team] || {};
+    const updated = kitTeamUpdated(team);
+    const teamCls = team === 'Athlone 1' ? 'team-1' : team === 'Athlone 2' ? 'team-2' : 'team-3';
+
+    const rows = KIT_ITEMS.map(item => {
+      const d = td[item.key] || {};
+      const qty = d.qty !== undefined ? d.qty : '—';
+      const condClass = d.cond === 'Good' ? 'k-good' : d.cond === 'Fair' ? 'k-fair' : d.cond === 'Needs Replacing' ? 'k-needs' : '';
+      const condBadge = d.cond === 'Good'
+        ? '<span class="kit-cond-badge cb-good">Good</span>'
+        : d.cond === 'Fair'
+        ? '<span class="kit-cond-badge cb-fair">Fair</span>'
+        : d.cond === 'Needs Replacing'
+        ? '<span class="kit-cond-badge cb-needs">Needs Replacing</span>'
+        : '<span style="color:var(--text3)">—</span>';
+      return '<tr class="' + condClass + '">'
+        + '<td>' + item.label + '</td>'
+        + '<td style="text-align:center;font-weight:700;">' + qty + '</td>'
+        + '<td>' + condBadge + '</td>'
+        + '</tr>';
+    }).join('');
+
+    return '<div class="kit-team-col">'
+      + '<div class="kit-team-header">'
+      + '<span class="team-pill ' + teamCls + '" style="font-size:11px;padding:2px 8px;">' + team + '</span>'
+      + (updated ? '<span class="kit-team-updated">' + updated + '</span>' : '')
+      + '<button class="kit-edit-btn" onclick="openKitModal(this.dataset.team)" data-team="' + team + '">Edit</button>'
+      + '</div>'
+      + '<table class="kit-table">'
+      + '<thead><tr><th>Item</th><th>Qty</th><th>Condition</th></tr></thead>'
+      + '<tbody>' + rows + '</tbody>'
+      + '</table>'
+      + '</div>';
+  }).join('') + '</div>';
 }
 function openKitModal(team){
   kitModalTeam=team||"Athlone 1";
@@ -2372,45 +2455,70 @@ function renderThisWeek() {
     const dayNum  = d.getDate();
     const mon     = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][d.getMonth()];
 
+    const lifts = availability[key + '__lifts'] || {};
+
     const chipGroup = (arr, cls) => arr.length
-      ? arr.map(n => `<span class="avail-chip ${cls}">${n}</span>`).join('')
+      ? arr.map(n => {
+          const liftLoc = lifts[n];
+          return '<span class="avail-chip ' + cls + '">' + n
+            + (liftLoc ? ' <span style="font-size:10px;opacity:.85;">&#x1F697; ' + liftLoc + '</span>' : '')
+            + '</span>';
+        }).join('')
       : '<span style="font-size:11px;color:var(--text3);">None</span>';
 
-    return `<div class="week-fixture-card">
-      <div class="week-fixture-top">
-        <div>
-          <div class="week-fixture-title">vs ${f.opponent}</div>
-          <div class="week-fixture-meta">
-            <span class="sched-tag ${schedTagClass(f.team)}">${f.team}</span>
-            &nbsp;${dayName} ${dayNum} ${mon}${f.time ? ' &middot; ' + f.time : ''}${f.notes ? ' &middot; ' + f.notes : ''}
-          </div>
-        </div>
-        <button class="btn btn-sm btn-primary" onclick="openAvailModal('${key}', '${f.opponent}', '${f.date}', '${f.team}', '${f.time||''}')">
-          Mark Availability
-        </button>
-      </div>
-      <div class="week-avail-row">
-        <div class="week-avail-groups">
-          <div class="avail-group">
-            <div class="avail-group-title ag-yes">&#x2705; Available (${yes.length})</div>
-            <div class="avail-chips">${chipGroup(yes, 'avail-chip-yes')}</div>
-          </div>
-          <div class="avail-group">
-            <div class="avail-group-title ag-maybe">&#x1F914; Maybe (${maybe.length})</div>
-            <div class="avail-chips">${chipGroup(maybe, 'avail-chip-maybe')}</div>
-          </div>
-          <div class="avail-group">
-            <div class="avail-group-title ag-no">&#x274C; Unavailable (${no.length})</div>
-            <div class="avail-chips">${chipGroup(no, 'avail-chip-no')}</div>
-          </div>
-        </div>
-      </div>
-    </div>`;
+    const liftNeeded = Object.entries(lifts);
+    const liftHTML = liftNeeded.length
+      ? '<div class="avail-group" style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border);">'
+        + '<div class="avail-group-title" style="color:#f59e0b;">&#x1F697; Lifts Needed (' + liftNeeded.length + ')</div>'
+        + '<div class="avail-chips">'
+        + liftNeeded.map(function(e) {
+            return '<span class="avail-chip" style="background:rgba(245,158,11,.12);color:#b45309;">'
+              + e[0] + ' — ' + e[1] + '</span>';
+          }).join('')
+        + '</div></div>'
+      : '';
+
+    return '<div class="week-fixture-card">'
+      + '<div class="week-fixture-top">'
+      + '<div>'
+      + '<div class="week-fixture-title">vs ' + f.opponent + '</div>'
+      + '<div class="week-fixture-meta">'
+      + '<span class="sched-tag ' + schedTagClass(f.team) + '">' + f.team + '</span>'
+      + '&nbsp;' + dayName + ' ' + dayNum + ' ' + mon
+      + (f.time ? ' &middot; ' + f.time : '')
+      + (f.notes ? ' &middot; ' + f.notes : '')
+      + '</div></div>'
+      + '<button class="btn btn-sm btn-primary"'
+      + ' data-key="' + key + '"'
+      + ' data-opp="' + f.opponent + '"'
+      + ' data-date="' + f.date + '"'
+      + ' data-team="' + f.team + '"'
+      + ' data-time="' + (f.time||'') + '"'
+      + ' onclick="openAvailModal(this.dataset.key,this.dataset.opp,this.dataset.date,this.dataset.team,this.dataset.time)">'
+      + 'Mark Availability</button>'
+      + '</div>'
+      + '<div class="week-avail-row"><div class="week-avail-groups">'
+      + '<div class="avail-group">'
+      + '<div class="avail-group-title ag-yes">&#x2705; Available (' + yes.length + ')</div>'
+      + '<div class="avail-chips">' + chipGroup(yes, 'avail-chip-yes') + '</div>'
+      + '</div>'
+      + '<div class="avail-group">'
+      + '<div class="avail-group-title ag-maybe">&#x1F914; Maybe (' + maybe.length + ')</div>'
+      + '<div class="avail-chips">' + chipGroup(maybe, 'avail-chip-maybe') + '</div>'
+      + '</div>'
+      + '<div class="avail-group">'
+      + '<div class="avail-group-title ag-no">&#x274C; Unavailable (' + no.length + ')</div>'
+      + '<div class="avail-chips">' + chipGroup(no, 'avail-chip-no') + '</div>'
+      + '</div>'
+      + liftHTML
+      + '</div></div>'
+      + '</div>';
   }).join('');
 }
 
 function openAvailModal(key, opponent, date, team, time) {
   document.getElementById('avail-fixture-key').value = key;
+  document.getElementById('avail-lift').value = '';
   document.getElementById('avail-modal-title').textContent = 'vs ' + opponent;
   const d = new Date(date + 'T12:00:00');
   const mon = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][d.getMonth()];
@@ -2451,22 +2559,42 @@ function renderAvailSummary(key) {
   const yes   = entries.filter(([,v])=>v==='yes').map(([n])=>n);
   const maybe = entries.filter(([,v])=>v==='maybe').map(([n])=>n);
   const no    = entries.filter(([,v])=>v==='no').map(([n])=>n);
-  const row = (label, cls, arr) => arr.length ? `<div style="margin-bottom:8px;">
-    <div class="avail-group-title ${cls}" style="margin-bottom:5px;">${label} (${arr.length})</div>
-    <div class="avail-chips">${arr.map(n=>`<span class="avail-chip avail-chip-${cls.replace('ag-','')}">${n}</span>`).join('')}</div>
-  </div>` : '';
+  const lifts = availability[key + '__lifts'] || {};
+  const liftEntries = Object.entries(lifts);
+  const row = (label, cls, arr) => arr.length ? '<div style="margin-bottom:8px;">'
+    + '<div class="avail-group-title ' + cls + '" style="margin-bottom:5px;">' + label + ' (' + arr.length + ')</div>'
+    + '<div class="avail-chips">' + arr.map(function(n) {
+        const liftLoc = lifts[n];
+        return '<span class="avail-chip avail-chip-' + cls.replace('ag-','') + '">' + n
+          + (liftLoc ? ' &#x1F697; ' + liftLoc : '') + '</span>';
+      }).join('') + '</div>'
+    + '</div>' : '';
+  var liftHTML = liftEntries.length
+    ? '<div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border);font-size:12px;">'
+      + '<span style="color:var(--text3);">&#x1F697; Lifts needed: </span>'
+      + liftEntries.map(function(e){return '<strong>'+e[0]+'</strong> — '+e[1];}).join(', ')
+      + '</div>' : '';
   document.getElementById('avail-summary').innerHTML =
     row('&#x2705; Available','ag-yes',yes) +
     row('&#x1F914; Maybe','ag-maybe',maybe) +
-    row('&#x274C; Unavailable','ag-no',no);
+    row('&#x274C; Unavailable','ag-no',no) +
+    liftHTML;
 }
 
 function saveAvailability() {
   const key  = document.getElementById('avail-fixture-key').value;
   const name = document.getElementById('avail-name-select').value;
+  const lift = document.getElementById('avail-lift').value.trim();
   if (!name) { alert('Please select your name.'); return; }
   if (!availability[key]) availability[key] = {};
   availability[key][name] = availChoice;
+  // Store lift request: key__lift object separate from availability responses
+  if (!availability[key + '__lifts']) availability[key + '__lifts'] = {};
+  if (lift) {
+    availability[key + '__lifts'][name] = lift;
+  } else {
+    delete availability[key + '__lifts'][name];
+  }
   sv('acc_availability', availability);
   renderAvailSummary(key);
   renderThisWeek();
@@ -2476,9 +2604,11 @@ function saveAvailability() {
   const yes   = entries.filter(([,v])=>v==='yes').map(([n])=>n).join(', ');
   const maybe = entries.filter(([,v])=>v==='maybe').map(([n])=>n).join(', ');
   const no    = entries.filter(([,v])=>v==='no').map(([n])=>n).join(', ');
+  const lifts = availability[key + '__lifts'] || {};
+  const liftStr = Object.entries(lifts).map(([n,loc]) => n + ' (' + loc + ')').join(', ');
   syncToSheet('Availability',
-    ['Fixture Key','Available','Maybe','Unavailable','Updated At'],
-    [key, yes, maybe, no, new Date().toISOString()]
+    ['Fixture Key','Available','Maybe','Unavailable','Lifts Needed','Updated At'],
+    [key, yes, maybe, no, liftStr, new Date().toISOString()]
   );
 
   const btn = document.querySelector('#modal-avail .btn-primary');
@@ -2579,7 +2709,11 @@ loadFromSheets();
       <button class="avail-choice-btn" id="avail-btn-no" onclick="setAvailChoice('no')">&#x274C; Unavailable</button>
       <button class="avail-choice-btn" id="avail-btn-maybe" onclick="setAvailChoice('maybe')">&#x1F914; Maybe</button>
     </div>
-    <div id="avail-summary"></div>
+    <div class="form-row" style="margin-top:14px;">
+      <label>&#x1F697; Need a lift? <span style="font-weight:400;color:var(--text3);font-size:12px;">(optional — enter pickup location)</span></label>
+      <input type="text" id="avail-lift" placeholder="e.g. Town centre, Monksland..." style="margin-top:6px;">
+    </div>
+    <div id="avail-summary" style="margin-top:14px;"></div>
     <div class="modal-footer">
       <button class="btn" onclick="closeAvailModal()">Close</button>
       <button class="btn btn-primary" onclick="saveAvailability()">Save</button>
