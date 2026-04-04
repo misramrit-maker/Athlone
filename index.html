@@ -1284,9 +1284,16 @@ function saveResult() {
     savedAt:new Date().toISOString()};
   const i=results.findIndex(x=>x.matchId===mid);
   if(i>=0)results[i]=d;else results.push(d);
-  sv(K.r,results);closeModal();renderSchedule();renderResults();updateHeader();
-  syncToSheet('Results',['ID','Match ID','Date','Opponent','Result','Athlone Score','Opponent Score','Player of Match','Notes','Saved At'],
-    [d.id,d.matchId,match?.date||'',match?.opponent||'',d.result,d.ourScore||'',d.theirScore||'',potmPlayer?full(potmPlayer):'',d.notes||'',d.savedAt]);
+  sv(K.r,results);closeModal();renderResults();updateHeader();
+  // For fixed schedule fixtures, match won't exist in matches array — use fixture key parts
+  const fixedF = FIXED_SCHEDULE.find(f => (f.date+'_'+f.team+'_'+f.opponent.replace(/\s/g,'')) === mid);
+  const opponent = match?.opponent || fixedF?.opponent || '';
+  const date     = match?.date     || fixedF?.date     || '';
+
+  syncToSheet('Results',
+    ['ID','Match ID','Date','Opponent','Team','Result','Athlone Score','Opponent Score','Star Performers','Summary','Saved At'],
+    [d.id, d.matchId, date, opponent, d.team||'', d.result, d.ourScore||'', d.theirScore||'', d.stars||'', d.notes||'', d.savedAt]
+  );
 }
 
 // ââ SELECTION ââââââââââââââââââââââââââââââââââââââââââââ
