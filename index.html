@@ -39,7 +39,7 @@
 
   .app-wrap { max-width: 920px; margin: 0 auto; padding: 20px 16px; }
 
-  /* ââ HEADER âââââââââââââââââââââââââââââââââââââââââââ */
+  /* -- HEADER ------------------------------------------- */
   .club-header {
     display: flex;
     align-items: center;
@@ -86,7 +86,7 @@
 
   #header-stats { margin-left: auto; font-size: 12px; color: var(--text2); text-align: right; line-height: 1.7; }
 
-  /* ââ SYNC STATUS âââââââââââââââââââââââââââââââââââââââ */
+  /* -- SYNC STATUS --------------------------------------- */
   #sync-status {
     display: inline-flex; align-items: center; gap: 5px;
     font-size: 11px; padding: 3px 10px; border-radius: 99px; font-weight: 500; transition: all .3s;
@@ -99,7 +99,7 @@
   .sync-dot.pulse { animation: pulse 1s infinite; }
   @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
 
-  /* ââ CONFIG BANNER ââââââââââââââââââââââââââââââââââââ */
+  /* -- CONFIG BANNER ------------------------------------ */
   #config-banner {
     background: var(--gold-dim); border: 1px solid var(--gold);
     border-radius: 10px; padding: 12px 16px; margin-bottom: 16px;
@@ -107,7 +107,7 @@
   }
   #config-banner a { color: var(--gold); font-weight: 600; }
 
-  /* ââ NAV ââââââââââââââââââââââââââââââââââââââââââââââ */
+  /* -- NAV ---------------------------------------------- */
   nav {
     display: flex; gap: 1px; flex-wrap: nowrap; overflow-x: auto;
     background: var(--surface);
@@ -132,7 +132,7 @@
   .nav-btn:hover { color: #fff; background: var(--surface2); }
   .nav-btn.active { color: #0f1210; background: var(--accent); font-weight: 800; }
 
-  /* ââ PAGES ââââââââââââââââââââââââââââââââââââââââââââ */
+  /* -- PAGES -------------------------------------------- */
   .page { display: none; }
   .page.active { display: block; animation: fadeIn .18s ease; }
   @keyframes fadeIn { from{opacity:0;transform:translateY(4px)} to{opacity:1;transform:none} }
@@ -140,7 +140,7 @@
   .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; flex-wrap: wrap; gap: 10px; }
   .page-title { font-family: 'Playfair Display', serif; font-size: 20px; font-weight: 700; color: var(--text); }
 
-  /* ââ BUTTONS ââââââââââââââââââââââââââââââââââââââââââ */
+  /* -- BUTTONS ------------------------------------------ */
   .btn {
     background: none; border: 1px solid var(--border2);
     border-radius: 8px; padding: 7px 14px; font-size: 13px;
@@ -154,14 +154,14 @@
   .btn-danger { color: var(--danger); border-color: var(--danger-dim); }
   .btn-danger:hover { background: var(--danger-dim); border-color: var(--danger); }
 
-  /* ââ CARDS ââââââââââââââââââââââââââââââââââââââââââââ */
+  /* -- CARDS -------------------------------------------- */
   .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 16px; }
 
-  /* ââ GRIDS ââââââââââââââââââââââââââââââââââââââââââââ */
+  /* -- GRIDS -------------------------------------------- */
   .grid-2 { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 12px; }
   .grid-3 { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 12px; }
 
-  /* ââ PLAYER CARD âââââââââââââââââââââââââââââââââââââââ */
+  /* -- PLAYER CARD --------------------------------------- */
   .player-card {
     position: relative; display: flex; align-items: flex-start; gap: 12px;
     padding: 14px 16px;
@@ -191,7 +191,7 @@
   .star-btn.starred { color: var(--gold); }
   .player-actions { display: flex; gap: 6px; margin-top: 8px; }
 
-  /* ââ BADGES âââââââââââââââââââââââââââââââââââââââââââ */
+  /* -- BADGES ------------------------------------------- */
   .badge { display: inline-block; padding: 2px 8px; border-radius: 99px; font-size: 11px; font-weight: 600; letter-spacing: .02em; }
   .badge-green  { background: rgba(46,204,138,.12); color: var(--accent); }
   .badge-blue   { background: rgba(60,130,220,.14); color: #6ab0f5; }
@@ -199,7 +199,7 @@
   .badge-gray   { background: var(--surface2); color: var(--text2); }
   .badge-purple { background: rgba(130,100,220,.14); color: #b89af0; }
 
-  /* ââ FORMS ââââââââââââââââââââââââââââââââââââââââââââ */
+  /* -- FORMS -------------------------------------------- */
   .form-row { margin-bottom: 12px; }
   .form-row label { display: block; font-size: 11px; color: var(--text3); margin-bottom: 5px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; }
   input[type=text], input[type=date], input[type=number], select, textarea {
@@ -215,13 +215,13 @@
   select option { background: var(--surface2); }
   .form-2col { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 
-  /* ââ MODAL ââââââââââââââââââââââââââââââââââââââââââââ */
+  /* -- MODAL -------------------------------------------- */
   .modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,.7); backdrop-filter: blur(4px); z-index: 100; display: flex; align-items: center; justify-content: center; padding: 16px; }
   .modal { background: var(--surface); border: 1px solid var(--border2); border-radius: 16px; padding: 24px; max-width: 480px; width: 100%; max-height: 88vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,.6); }
   .modal-title { font-family: 'Playfair Display', serif; font-size: 17px; font-weight: 700; margin-bottom: 18px; color: var(--text); }
   .modal-footer { display: flex; justify-content: flex-end; gap: 8px; margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--border); }
 
-  /* ââ TABLE ââââââââââââââââââââââââââââââââââââââââââââ */
+  /* -- TABLE -------------------------------------------- */
   .table-wrap { overflow-x: auto; }
   table { width: 100%; border-collapse: collapse; font-size: 13px; }
   th { font-weight: 600; font-size: 11px; color: var(--text3); text-align: left; padding: 10px 14px; border-bottom: 1px solid var(--border); white-space: nowrap; text-transform: uppercase; letter-spacing: .05em; }
@@ -229,7 +229,7 @@
   tr:last-child td { border-bottom: none; }
   tr:hover td { background: var(--surface2); color: var(--text); }
 
-  /* ââ MATCH CARDS âââââââââââââââââââââââââââââââââââââââ */
+  /* -- MATCH CARDS --------------------------------------- */
   .match-card {
     padding: 16px 18px; background: var(--surface);
     border: 1px solid var(--border); border-radius: var(--radius); margin-bottom: 10px;
@@ -241,18 +241,18 @@
   .match-meta { font-size: 12px; color: var(--text3); margin-top: 4px; }
   .match-actions { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
 
-  /* ââ RESULTS âââââââââââââââââââââââââââââââââââââââââââ */
+  /* -- RESULTS ------------------------------------------- */
   .result-win  { color: var(--accent); font-weight: 700; }
   .result-loss { color: var(--danger); font-weight: 700; }
   .result-draw { color: var(--text2); font-weight: 700; }
 
-  /* ââ STATS ââââââââââââââââââââââââââââââââââââââââââââ */
+  /* -- STATS -------------------------------------------- */
   .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(95px, 1fr)); gap: 10px; margin-bottom: 18px; }
   .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; text-align: center; }
   .stat-val { font-family: 'Playfair Display', serif; font-size: 30px; font-weight: 700; color: var(--text); }
   .stat-label { font-size: 11px; color: var(--text3); margin-top: 3px; text-transform: uppercase; letter-spacing: .06em; font-weight: 600; }
 
-  /* ââ SUBTABS âââââââââââââââââââââââââââââââââââââââââââ */
+  /* -- SUBTABS ------------------------------------------- */
   .sub-tabs { display: flex; gap: 6px; margin-bottom: 16px; flex-wrap: wrap; }
   .sub-tab {
     background: none; border: 1px solid var(--border);
@@ -262,23 +262,23 @@
   .sub-tab:hover { color: var(--text); border-color: var(--border2); }
   .sub-tab.active { background: var(--accent-dim); color: var(--accent); border-color: rgba(46,204,138,.4); }
 
-  /* ââ SECTION LABEL âââââââââââââââââââââââââââââââââââââ */
+  /* -- SECTION LABEL ------------------------------------- */
   .section-label { font-size: 11px; font-weight: 700; color: var(--text3); text-transform: uppercase; letter-spacing: .08em; margin-bottom: 10px; }
 
-  /* ââ SELECTION âââââââââââââââââââââââââââââââââââââââââ */
+  /* -- SELECTION ----------------------------------------- */
   .player-check { display: flex; align-items: center; gap: 10px; padding: 9px 0; border-bottom: 1px solid var(--border); font-size: 14px; cursor: pointer; color: var(--text2); }
   .player-check:last-child { border-bottom: none; }
   .player-check input { width: 16px; height: 16px; cursor: pointer; accent-color: var(--accent); }
   .player-check:hover { color: var(--text); }
 
-  /* ââ PHOTOS ââââââââââââââââââââââââââââââââââââââââââââ */
+  /* -- PHOTOS -------------------------------------------- */
   .album-frame { border: 1px solid var(--border); border-radius: 12px; overflow: hidden; background: var(--surface2); margin-top: 12px; }
   .album-placeholder { height: 320px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; color: var(--text3); font-size: 14px; }
 
-  /* ââ EMPTY STATE âââââââââââââââââââââââââââââââââââââââ */
+  /* -- EMPTY STATE --------------------------------------- */
   .empty-state { text-align: center; padding: 52px 20px; color: var(--text3); font-size: 14px; }
 
-  /* ââ DIVIDER âââââââââââââââââââââââââââââââââââââââââââ */
+  /* -- DIVIDER ------------------------------------------- */
   .divider { height: 1px; background: var(--border); margin: 18px 0; }
 
   .hidden { display: none !important; }
@@ -294,7 +294,7 @@
     .club-title { font-size: 16px; }
   }
 
-  /* ââ FOOTER âââââââââââââââââââââââââââââââââââââââââââ */
+  /* -- FOOTER ------------------------------------------- */
   .club-footer {
     margin-top: 40px;
     border-top: 1px solid var(--border);
@@ -633,7 +633,7 @@
 
   <!-- CONFIG BANNER -->
   <div id="config-banner" class="hidden">
-    â ï¸ Google Sheets sync not configured. Open this file in a text editor, find <code>SCRIPT_URL</code> near the top of the &lt;script&gt; section, and paste your Apps Script Web App URL there.
+    &#x26A0; Google Sheets sync not configured. Open this file in a text editor, find <code>SCRIPT_URL</code> near the top of the &lt;script&gt; section, and paste your Apps Script Web App URL there.
   </div>
 
   <!-- HEADER -->
@@ -724,7 +724,7 @@
     <div class="form-row">
       <label>Choose fixture</label>
       <select id="sel-fixture" onchange="loadSelection()">
-        <option value="">â select a fixture â</option>
+        <option value="">&#x2014; select a fixture &#x2014;</option>
       </select>
     </div>
     <div id="sel-panel" class="hidden">
@@ -974,7 +974,7 @@
         <select id="m-ha"><option>Home</option><option>Away</option><option>Neutral</option></select>
       </div>
     </div>
-    <div class="form-row"><label>Competition</label><input type="text" id="m-comp" placeholder="e.g. Leinster League, Cupâ¦"></div>
+    <div class="form-row"><label>Competition</label><input type="text" id="m-comp" placeholder="e.g. Leinster League, Cup&#x2026;"></div>
     <div class="modal-footer">
       <button class="btn" onclick="closeModal()">Cancel</button>
       <button class="btn btn-primary" onclick="saveMatch()">Save Fixture</button>
@@ -1030,7 +1030,7 @@
       <label>Google Photos share link</label>
       <input type="text" id="al-url" placeholder="https://photos.google.com/share/...">
       <div style="font-size:11px;color:var(--text3);margin-top:6px;line-height:1.6;">
-        In Google Photos: open album â Share icon â Copy link. Set sharing to <strong style="color:var(--text2);">Anyone with the link</strong>.
+        In Google Photos: open album &#x2192; Share icon &#x2192; Copy link. Set sharing to <strong style="color:var(--text2);">Anyone with the link</strong>.
       </div>
     </div>
     <div class="modal-footer">
@@ -1042,11 +1042,11 @@
 </div>
 
 <script>
-// âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+// ===============================================================
 // GOOGLE SHEETS CONFIG
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzkQUxZ4gDu9GqMjEzteSMcqNei3vC5g2B5WQxeCB7Wmmsjgnvco1LpXc82Yf14GQn3/exec';
 
-// ââ SYNC HELPERS âââââââââââââââââââââââââââââââââââââââââââââ
+// -- SYNC HELPERS ---------------------------------------------
 function setSyncStatus(state, msg) {
   const el = document.getElementById('sync-status');
   const dot = el.querySelector('.sync-dot');
@@ -1076,7 +1076,7 @@ async function syncToSheet(tab, headers, row, upsertKey) {
     console.error('Sheets sync error - check SCRIPT_URL:', err);
   }
 }
-// ââ LOCAL STORAGE âââââââââââââââââââââââââââââââââââââââââââââ
+// -- LOCAL STORAGE ---------------------------------------------
 const K = { p:'acc_players', m:'acc_matches', r:'acc_results', s:'acc_selections', a:'acc_albums' };
 const ld = k => { try { return JSON.parse(localStorage.getItem(k)); } catch { return null; } };
 const sv = (k,v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch(e){} };
@@ -1139,7 +1139,7 @@ function updateHeader() {
   statsDiv.innerHTML = `<div>${players.length} players &nbsp;&middot;&nbsp; ${up} upcoming${played?'&nbsp;&middot;&nbsp;'+won+'/'+played+' wins':''}</div>`;
 }
 
-// ââ PLAYERS ââââââââââââââââââââââââââââââââââââââââââââââ
+// -- PLAYERS ----------------------------------------------
 function openAddPlayer() {
   editPid = null;
   document.getElementById('pm-title').textContent = 'Add Player';
@@ -1182,6 +1182,7 @@ function savePlayer() {
     savedAt: new Date().toISOString()
   };
   if(editPid){const i=players.findIndex(x=>x.id===editPid);players[i]=d;}else players.push(d);
+  // sort handled in renderPlayers
   sv(K.p,players);closeModal();renderPlayers();updateHeader();
   syncToSheet('Players',['ID','First Name','Last Name','Role','Gender','Batting Style','Bowling Style','Notes','Starred','Vehicle Reg','Saved At'],
     [d.id,d.firstName,d.lastName,d.role,d.gender||'Male',d.batting||'',d.bowling||'',d.notes||'',d.starred?'Yes':'No',d.vrn||'',d.savedAt]);
@@ -1205,6 +1206,7 @@ function filterPlayers(f,btn) {
 }
 
 function renderPlayers() {
+  players.sort((a,b)=>a.firstName.localeCompare(b.firstName)||a.lastName.localeCompare(b.lastName));
   let list=[...players];
   if(pFilter==='starred')list=list.filter(p=>p.starred);
   else if(pFilter==='Female')list=list.filter(p=>p.gender==='Female');
@@ -1231,12 +1233,12 @@ function renderPlayers() {
           <button class="btn btn-sm btn-danger" onclick="deletePlayer('${p.id}')">Remove</button>
         </div>
       </div>
-      <button class="star-btn ${p.starred?'starred':''}" onclick="toggleStar('${p.id}')" title="${p.starred?'Unstar':'Star player'}">${p.starred?'â':'â'}</button>
+      <button class="star-btn ${p.starred?'starred':''}" onclick="toggleStar('${p.id}')" title="${p.starred?'Unstar':'Star player'}">${p.starred?'&#x2605;':'&#x2606;'}</button>
     </div>`).join('');
   updateHeader();
 }
 
-// ââ SCHEDULE âââââââââââââââââââââââââââââââââââââââââââââ
+// -- SCHEDULE ---------------------------------------------
 function openAddMatch() {
   ['m-opp','m-venue','m-comp'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('m-date').value='';
@@ -1288,8 +1290,8 @@ function renderSchedule() {
         ${rHtml}
       </div>
       <div class="match-actions">
-        <button class="btn btn-sm" onclick="openResultModal('${m.id}')">ð ${r?'Edit result':'Result'}</button>
-        <button class="btn btn-sm btn-danger" onclick="deleteMatch('${m.id}')">â</button>
+        <button class="btn btn-sm" onclick="openResultModal('${m.id}')"> ${r?'Edit result':'Result'}</button>
+        <button class="btn btn-sm btn-danger" onclick="deleteMatch('${m.id}')">&#x2715;</button>
       </div>
     </div>`;
   };
@@ -1297,7 +1299,7 @@ function renderSchedule() {
   document.getElementById('past-matches').innerHTML=past.length?past.map(card).join(''):'<div style="color:var(--text3);font-size:13px;padding:4px 0;">No past fixtures yet.</div>';
 }
 
-// ââ RESULT MODAL âââââââââââââââââââââââââââââââââââââââââ
+// -- RESULT MODAL -----------------------------------------
 function openResultModal(mid) {
   const r = results.find(x => x.matchId === mid);
   // Auto-detect team from fixture (fixed schedule or user matches)
@@ -1350,15 +1352,36 @@ function deleteResult(id) {
   syncDeleteToSheet('Results', 'ID', id);
 }
 
-// ââ SELECTION ââââââââââââââââââââââââââââââââââââââââââââ
+// -- SELECTION --------------------------------------------
 function renderSelectionPage() {
-  const t=todayStr();
-  const up=matches.filter(m=>m.date>=t).sort((a,b)=>a.date.localeCompare(b.date));
-  const sel=document.getElementById('sel-fixture');
-  const prev=sel.value;
-  sel.innerHTML='<option value="">â select a fixture â</option>'+up.map(m=>`<option value="${m.id}" ${m.id===prev?'selected':''}>${fmtDate(m.date)} &middot; vs ${m.opponent}</option>`).join('');
-  if(!up.length)sel.innerHTML='<option value="">No upcoming fixtures</option>';
-  if(prev&&up.find(m=>m.id===prev))loadSelection();
+  var today = todayStr();
+  var tenDays = new Date(); tenDays.setDate(tenDays.getDate() + 10);
+  var tenDaysStr = tenDays.toISOString().slice(0,10);
+
+  // Fixed schedule fixtures in next 10 days
+  var fixedUp = FIXED_SCHEDULE.filter(function(f) {
+    return f.date > today && f.date <= tenDaysStr;
+  }).map(function(f) {
+    return { id: f.date+'_'+f.team+'_'+f.opponent.replace(/\s/g,''), date:f.date, opponent:f.opponent, team:f.team };
+  });
+
+  // User-added matches in next 10 days
+  var userUp = matches.filter(function(m) {
+    return m.date > today && m.date <= tenDaysStr;
+  }).map(function(m) {
+    return { id:m.id, date:m.date, opponent:m.opponent, team:m.homeaway||'' };
+  });
+
+  var up = fixedUp.concat(userUp).sort(function(a,b){ return a.date.localeCompare(b.date); });
+
+  var sel = document.getElementById('sel-fixture');
+  var prev = sel.value;
+  sel.innerHTML = '<option value="">-- select a fixture --</option>' +
+    up.map(function(f) {
+      return '<option value="'+f.id+'"'+(f.id===prev?' selected':'')+'>'+fmtDate(f.date)+' · '+f.team+' vs '+f.opponent+'</option>';
+    }).join('');
+  if (!up.length) sel.innerHTML = '<option value="">No fixtures in next 10 days</option>';
+  if (prev && up.find(function(f){ return f.id===prev; })) loadSelection();
   else document.getElementById('sel-panel').classList.add('hidden');
 }
 
@@ -1370,18 +1393,42 @@ function loadSelection() {
   renderSelList(mid,sel);renderSelSummary(mid,sel);
 }
 
-function renderSelList(mid,sel) {
-  const sorted=[...players].sort((a,b)=>(b.starred?1:0)-(a.starred?1:0)||a.role.localeCompare(b.role)||a.lastName.localeCompare(b.lastName));
-  document.getElementById('sel-list').innerHTML=sorted.map(p=>`
-    <label class="player-check">
-      <input type="checkbox" value="${p.id}" ${sel.includes(p.id)?'checked':''} onchange="onSelChange('${mid}')">
-      <div class="avatar" style="width:30px;height:30px;min-width:30px;font-size:12px;">${init(p)}</div>
-      <div style="flex:1;">
-        <span style="font-weight:600">${full(p)}</span>
-        ${p.starred?'<span style="color:var(--gold);font-size:14px;margin-left:4px;">â</span>':''}
-        <span class="badge ${roleClass(p.role)}" style="margin-left:6px;">${p.role}</span>
-      </div>
-    </label>`).join('');
+function renderSelList(mid, sel) {
+  var avail = availability[mid] || {};
+  var availNames = Object.entries(avail).filter(function(e){ return e[1]==='yes'||e[1]==='maybe'; }).map(function(e){ return e[0]; });
+  var hasAvail = availNames.length > 0;
+
+  // Players who marked available/maybe + already selected
+  var listPlayers;
+  if (hasAvail) {
+    var availPs = players.filter(function(p){ return availNames.includes(full(p)); });
+    var selectedPs = players.filter(function(p){ return sel.includes(p.id) && !availPs.find(function(ap){ return ap.id===p.id; }); });
+    listPlayers = availPs.concat(selectedPs);
+  } else {
+    listPlayers = players.slice();
+  }
+
+  listPlayers.sort(function(a,b){
+    return (b.starred?1:0)-(a.starred?1:0) || a.role.localeCompare(b.role) || a.firstName.localeCompare(b.firstName);
+  });
+
+  var header = hasAvail
+    ? '<div style="font-size:12px;color:var(--text3);margin-bottom:8px;">&#x2705; Showing '+listPlayers.length+' players who marked availability</div>'
+    : '<div style="font-size:12px;color:var(--text3);margin-bottom:8px;">No availability marked yet — showing full squad</div>';
+
+  document.getElementById('sel-list').innerHTML = header + listPlayers.map(function(p) {
+    var status = avail[full(p)];
+    var icon = status==='yes' ? ' <span style="color:#059669;font-size:12px;">&#x2705;</span>'
+             : status==='maybe' ? ' <span style="color:#d97706;font-size:12px;">&#x1F914;</span>' : '';
+    return '<label class="player-check">'
+      + '<input type="checkbox" value="'+p.id+'"'+(sel.includes(p.id)?' checked':'')+'" data-mid="'+mid+'" onchange="onSelChange(this.dataset.mid)">'
+      + '<div class="avatar" style="width:30px;height:30px;min-width:30px;font-size:12px;">'+init(p)+'</div>'
+      + '<div style="flex:1;">'
+      + '<span style="font-weight:600">'+full(p)+'</span>'+icon
+      + (p.starred?'<span style="color:var(--gold);font-size:14px;margin-left:4px;">&#x2605;</span>':'')
+      + '<span class="badge '+roleClass(p.role)+'" style="margin-left:6px;">'+p.role+'</span>'
+      + '</div></label>';
+  }).join('');
   updateSelCount();
 }
 
@@ -1416,7 +1463,7 @@ function saveSelection() {
   syncToSheet('Selections',['Match ID','Date','Opponent','Selected Players','Player Count','Saved At'],
     [mid,match?.date||'',match?.opponent||'',selNames.join(', '),sel.length,new Date().toISOString()]);
   const btn=document.getElementById('save-sel-btn');
-  btn.textContent='â Saved!';setTimeout(()=>btn.textContent='Save Selection',1800);
+  btn.textContent='&#x2713; Saved!';setTimeout(()=>btn.textContent='Save Selection',1800);
 }
 
 function clearSelection() {
@@ -1424,7 +1471,7 @@ function clearSelection() {
   updateSelCount();const mid=document.getElementById('sel-fixture').value;if(mid)renderSelSummary(mid,[]);
 }
 
-// ââ RESULTS ââââââââââââââââââââââââââââââââââââââââââââââ
+// -- RESULTS ----------------------------------------------
 
 let resultsTeam = 'all';
 function setResultsTeam(team, btn) {
@@ -1520,7 +1567,7 @@ function renderResults() {
 
 
 
-// ââ PHOTOS âââââââââââââââââââââââââââââââââââââââââââââââ
+// -- PHOTOS -----------------------------------------------
 function openAddAlbum(){document.getElementById('al-name').value='';document.getElementById('al-url').value='';showModal('modal-album');}
 
 function saveAlbum() {
@@ -1544,14 +1591,14 @@ function renderPhotos() {
   const viewer=document.getElementById('album-viewer');
   if(!albums.length){
     grid.innerHTML='';
-    viewer.innerHTML='<div class="empty-state"><div style="font-size:36px;margin-bottom:12px;">ð&middot;</div><div style="font-weight:600;margin-bottom:6px;color:var(--text2);">No albums yet</div><div style="font-size:13px;">Add a Google Photos public share link to display your club photos here.</div></div>';
+    viewer.innerHTML='<div class="empty-state"><div style="font-size:36px;margin-bottom:12px;">&middot;</div><div style="font-weight:600;margin-bottom:6px;color:var(--text2);">No albums yet</div><div style="font-size:13px;">Add a Google Photos public share link to display your club photos here.</div></div>';
     return;
   }
   grid.innerHTML=albums.map(a=>`
     <div class="card" style="cursor:pointer;transition:border-color .15s,box-shadow .15s;${activeAlbum===a.id?'border-color:var(--accent);':''}" onclick="viewAlbum('${a.id}')">
-      <div style="font-size:26px;margin-bottom:8px;">ð&middot;</div>
+      <div style="font-size:26px;margin-bottom:8px;">&middot;</div>
       <div style="font-weight:600;font-size:14px;margin-bottom:4px;color:var(--text);">${a.name}</div>
-      <div style="font-size:11px;color:var(--text3);word-break:break-all;margin-bottom:10px;">${a.url?a.url.slice(0,45)+'â¦':'No URL set'}</div>
+      <div style="font-size:11px;color:var(--text3);word-break:break-all;margin-bottom:10px;">${a.url?a.url.slice(0,45)+'&#x2026;':'No URL set'}</div>
       <div style="display:flex;gap:6px;">
         <button class="btn btn-sm" onclick="event.stopPropagation();viewAlbum('${a.id}')">View</button>
         <button class="btn btn-sm btn-danger" onclick="event.stopPropagation();deleteAlbum('${a.id}')">Remove</button>
@@ -1571,12 +1618,12 @@ function renderPhotos() {
     : '<div style="color:var(--text3);font-size:13px;padding:8px 0;">No URL set for this album.</div>';
 }
 
-// ââ MODAL ââââââââââââââââââââââââââââââââââââââââââââââââ
+// -- MODAL ------------------------------------------------
 function showModal(id){document.querySelectorAll('.modal').forEach(m=>m.classList.add('hidden'));document.getElementById('modal-bg').classList.remove('hidden');document.getElementById(id).classList.remove('hidden');}
 function closeModal(){document.getElementById('modal-bg').classList.add('hidden');document.querySelectorAll('.modal').forEach(m=>m.classList.add('hidden'));}
 function bgClose(e){if(e.target===document.getElementById('modal-bg'))closeModal();}
 
-// ââ INIT âââââââââââââââââââââââââââââââââââââââââââââââââ
+// -- INIT -------------------------------------------------
 
 if (!SCRIPT_URL) document.getElementById('config-banner').classList.remove('hidden');
 
@@ -1838,7 +1885,7 @@ function processSheetData(json) {
   if (json && json.status === 'ok' && json.data) {
     const d = json.data;
     let updated = false;
-    if (d['Players']    && d['Players'].length    > 1) { players    = rowsToPlayers(d['Players']);    sv(K.p, players);       updated = true; }
+    if (d['Players']    && d['Players'].length    > 1) { players    = rowsToPlayers(d['Players']); players.sort((a,b)=>a.firstName.localeCompare(b.firstName)||a.lastName.localeCompare(b.lastName)); sv(K.p, players);       updated = true; }
     if (d['Fixtures']   && d['Fixtures'].length   > 1) { matches    = rowsToMatches(d['Fixtures']);   sv(K.m, matches);       updated = true; }
     if (d['Results']    && d['Results'].length    > 1) { results    = rowsToResults(d['Results']);    sv(K.r, results);       updated = true; }
     if (d['Kit']          && d['Kit'].length          > 1) { kitData          = rowsToKit(d['Kit']);                sv('acc_kit', kitData);           updated = true; }
@@ -2059,84 +2106,89 @@ function saveKit(){
 // ── FIXED SCHEDULE ───────────────────────────────────────────
 const FIXED_SCHEDULE = [
   // April
-  {date:'2026-04-04',team:'Friendly',opponent:'Lucan',time:'',notes:''},
-  {date:'2026-04-06',team:'Friendly',opponent:'Laois',time:'',notes:''},
-  {date:'2026-04-11',team:'Friendly',opponent:'Kilconnell',time:'10:30am',notes:''},
-  {date:'2026-04-12',team:'Friendly',opponent:'Longford',time:'12pm',notes:''},
-  {date:'2026-04-18',team:'Friendly',opponent:'Kilconnell',time:'',notes:''},
-  {date:'2026-04-18',team:'Friendly',opponent:'North Kildare',time:'',notes:''},
-  {date:'2026-04-19',team:'Friendly',opponent:'Longford',time:'12pm',notes:''},
-  {date:'2026-04-25',team:'Friendly',opponent:'Naas',time:'12pm',notes:'T20, Women-Carlow'},
-  {date:'2026-04-26',team:'Friendly',opponent:"Women's T20",time:'11am',notes:''},
-  {date:'2026-04-26',team:'Friendly',opponent:'North Kildare',time:'3pm',notes:''},
-  {date:'2026-04-26',team:'Team 3',opponent:'Ongar',time:'',notes:''},
+  {date:'2026-04-04',team:'Friendly',opponent:'Lucan',time:'',notes:'',venue:''},
+  {date:'2026-04-06',team:'Friendly',opponent:'Laois',time:'',notes:'',venue:'A'},
+  {date:'2026-04-11',team:'Friendly',opponent:'Kilconnell',time:'10:30am',notes:'',venue:'A'},
+  {date:'2026-04-12',team:'Friendly',opponent:'Longford',time:'12pm',notes:'',venue:'H'},
+  {date:'2026-04-18',team:'Friendly',opponent:'Kilconnell',time:'',notes:'',venue:'A'},
+  {date:'2026-04-18',team:'Friendly',opponent:'North Kildare',time:'',notes:'',venue:'A'},
+  {date:'2026-04-19',team:'Friendly',opponent:'Longford',time:'12pm',notes:'',venue:'A'},
+  {date:'2026-04-25',team:'Friendly',opponent:'Naas',time:'12pm',notes:'T20',venue:'H'},
+  {date:'2026-04-25',team:'Women',opponent:'Carlow',time:'12pm',notes:'T20 · Women v Carlow',venue:'A'},
+  {date:'2026-04-26',team:'Women',opponent:"Women's T20",time:'11am',notes:'',venue:'H'},
+  {date:'2026-04-26',team:'Friendly',opponent:'North Kildare',time:'3pm',notes:'',venue:'H'},
+  {date:'2026-04-26',team:'Team 3',opponent:'Ongar',time:'',notes:'',venue:'A'},
   // May
-  {date:'2026-05-02',team:'Team 1',opponent:'North Kildare',time:'',notes:''},
-  {date:'2026-05-03',team:'Team 1',opponent:'Rush',time:'',notes:'YMCA Cup'},
-  {date:'2026-05-09',team:'Team 1',opponent:'Civil Service',time:'',notes:''},
-  {date:'2026-05-09',team:'Team 2',opponent:'Malahide',time:'',notes:''},
-  {date:'2026-05-04',team:'Team 3',opponent:'Ashbourne',time:'',notes:'R.C trophy'},
-  {date:'2026-05-10',team:'Team 3',opponent:'Knockharley',time:'',notes:''},
-  {date:'2026-05-16',team:'Team 1',opponent:'Clontarf',time:'',notes:''},
-  {date:'2026-05-16',team:'Team 3',opponent:'North County',time:'',notes:''},
-  {date:'2026-05-17',team:'Team 2',opponent:'Greystones',time:'',notes:''},
-  {date:'2026-05-17',team:'Team 3',opponent:'Ballina',time:'1pm',notes:'Friendly H'},
-  {date:'2026-05-23',team:'Team 1',opponent:'Tyrrelstown',time:'',notes:''},
-  {date:'2026-05-23',team:'Team 2',opponent:'Rush',time:'',notes:''},
-  {date:'2026-05-24',team:'Team 3',opponent:'Ongar',time:'',notes:''},
-  {date:'2026-05-31',team:'Team 1',opponent:'Longford',time:'',notes:'YMCA Cup'},
-  {date:'2026-05-31',team:'Team 2',opponent:'Terrenure',time:'',notes:'GS Cup'},
-  {date:'2026-05-31',team:'Team 3',opponent:'Longford',time:'',notes:'RC Trophy'},
+  {date:'2026-05-02',team:'Team 1',opponent:'North Kildare',time:'',notes:'',venue:'H'},
+  {date:'2026-05-03',team:'Team 1',opponent:'Rush',time:'',notes:'YMCA Cup',venue:'A'},
+  {date:'2026-05-04',team:'Team 3',opponent:'Ashbourne',time:'',notes:'R.C trophy',venue:'H'},
+  {date:'2026-05-09',team:'Team 1',opponent:'Civil Service',time:'',notes:'',venue:'A'},
+  {date:'2026-05-09',team:'Team 2',opponent:'Malahide',time:'',notes:'',venue:'A'},
+  {date:'2026-05-10',team:'Team 3',opponent:'Knockharley',time:'',notes:'',venue:'H'},
+  {date:'2026-05-16',team:'Team 1',opponent:'Clontarf',time:'',notes:'',venue:'H'},
+  {date:'2026-05-16',team:'Team 3',opponent:'North County',time:'',notes:'',venue:'A'},
+  {date:'2026-05-17',team:'Team 2',opponent:'Greystones',time:'',notes:'',venue:'A'},
+  {date:'2026-05-17',team:'Team 3',opponent:'Ballina',time:'1pm',notes:'Friendly H',venue:'H'},
+  {date:'2026-05-23',team:'Team 1',opponent:'Tyrrelstown',time:'',notes:'',venue:'H'},
+  {date:'2026-05-23',team:'Team 2',opponent:'Rush',time:'',notes:'',venue:'A'},
+  {date:'2026-05-24',team:'Team 3',opponent:'Ongar',time:'',notes:'',venue:'H'},
+  {date:'2026-05-31',team:'Team 1',opponent:'Longford',time:'',notes:'YMCA Cup',venue:'A'},
+  {date:'2026-05-31',team:'Team 2',opponent:'Terrenure',time:'',notes:'GS Cup',venue:'A'},
+  {date:'2026-05-31',team:'Team 3',opponent:'Longford',time:'',notes:'RC Trophy',venue:'H'},
   // June
-  {date:'2026-06-01',team:'Team 3',opponent:'C. Service',time:'4pm',notes:'RC Trophy'},
-  {date:'2026-06-06',team:'Team 1',opponent:'Civil Service',time:'',notes:''},
-  {date:'2026-06-06',team:'Team 2',opponent:'Naas',time:'',notes:''},
-  {date:'2026-06-07',team:'Team 3',opponent:'Dundalk',time:'',notes:''},
-  {date:'2026-06-13',team:'Team 2',opponent:'Malahide',time:'',notes:''},
-  {date:'2026-06-14',team:'Team 1',opponent:'Greystones',time:'',notes:'Inter Cup'},
-  {date:'2026-06-14',team:'Team 3',opponent:'Dundalk',time:'',notes:''},
-  {date:'2026-06-20',team:'Team 2',opponent:'Gorey',time:'12:30',notes:''},
-  {date:'2026-06-20',team:'Team 2',opponent:'Tyrrells-Town',time:'4pm',notes:''},
-  {date:'2026-06-20',team:'Team 3',opponent:'Nth Kildare RC',time:'4pm',notes:'Trophy'},
-  {date:'2026-06-21',team:'Team 1',opponent:'Leinster',time:'',notes:'YMCA Cup'},
-  {date:'2026-06-27',team:'Team 1',opponent:'DLR County',time:'',notes:''},
-  {date:'2026-06-28',team:'Team 2',opponent:'Halverstown',time:'',notes:''},
-  {date:'2026-06-28',team:'Team 3',opponent:'Swords',time:'',notes:''},
+  {date:'2026-06-01',team:'Team 3',opponent:'C. Service',time:'4pm',notes:'RC Trophy',venue:'A'},
+  {date:'2026-06-06',team:'Team 1',opponent:'Civil Service',time:'',notes:'',venue:'H'},
+  {date:'2026-06-06',team:'Team 2',opponent:'Naas',time:'',notes:'',venue:'A'},
+  {date:'2026-06-07',team:'Team 3',opponent:'Dundalk',time:'',notes:'',venue:'H'},
+  {date:'2026-06-13',team:'Team 2',opponent:'Malahide',time:'',notes:'',venue:'H'},
+  {date:'2026-06-14',team:'Team 1',opponent:'Greystones',time:'',notes:'Inter Cup',venue:'H'},
+  {date:'2026-06-14',team:'Team 3',opponent:'Dundalk',time:'',notes:'',venue:'A'},
+  {date:'2026-06-20',team:'Team 2',opponent:'Gorey',time:'12:30',notes:'',venue:'H'},
+  {date:'2026-06-20',team:'Team 2',opponent:'Tyrrells-Town',time:'4pm',notes:'',venue:'H'},
+  {date:'2026-06-20',team:'Team 3',opponent:'Nth Kildare RC',time:'4pm',notes:'Trophy',venue:'A'},
+  {date:'2026-06-21',team:'Team 1',opponent:'Leinster',time:'',notes:'YMCA Cup',venue:'H'},
+  {date:'2026-06-27',team:'Team 1',opponent:'DLR County',time:'',notes:'',venue:'H'},
+  {date:'2026-06-28',team:'Team 2',opponent:'Halverstown',time:'',notes:'',venue:'H'},
+  {date:'2026-06-28',team:'Team 3',opponent:'Swords',time:'',notes:'',venue:'A'},
   // July
-  {date:'2026-07-04',team:'Team 1',opponent:'Malahide',time:'',notes:''},
-  {date:'2026-07-05',team:'Team 2',opponent:'Gorey',time:'',notes:''},
-  {date:'2026-07-05',team:'Team 3',opponent:'Swords',time:'',notes:''},
-  {date:'2026-07-11',team:'Team 2',opponent:'Naas',time:'',notes:''},
-  {date:'2026-07-12',team:'Team 3',opponent:'Tyrrelstown',time:'',notes:'RC Trophy'},
-  {date:'2026-07-18',team:'Team 2',opponent:'Halverstown',time:'',notes:''},
-  {date:'2026-07-19',team:'Team 3',opponent:'Finglas',time:'',notes:''},
-  {date:'2026-07-26',team:'Team 1',opponent:'Rush',time:'',notes:''},
-  {date:'2026-07-26',team:'Team 2',opponent:'Gorey',time:'',notes:''},
-  {date:'2026-07-26',team:'Team 3',opponent:'Mullingar',time:'',notes:''},
+  {date:'2026-07-04',team:'Team 1',opponent:'Malahide',time:'',notes:'',venue:'H'},
+  {date:'2026-07-05',team:'Team 2',opponent:'Gorey',time:'',notes:'',venue:'A'},
+  {date:'2026-07-05',team:'Team 3',opponent:'Swords',time:'',notes:'',venue:'H'},
+  {date:'2026-07-11',team:'Team 2',opponent:'Naas',time:'',notes:'',venue:'H'},
+  {date:'2026-07-12',team:'Team 3',opponent:'Tyrrelstown',time:'',notes:'RC Trophy',venue:'H'},
+  {date:'2026-07-18',team:'Team 2',opponent:'Halverstown',time:'',notes:'',venue:'A'},
+  {date:'2026-07-19',team:'Team 3',opponent:'Finglas',time:'',notes:'',venue:'H'},
+  {date:'2026-07-26',team:'Team 1',opponent:'Rush',time:'',notes:'',venue:'A'},
+  {date:'2026-07-26',team:'Team 2',opponent:'Gorey',time:'',notes:'',venue:'H'},
+  {date:'2026-07-26',team:'Team 3',opponent:'Mullingar',time:'',notes:'',venue:'A'},
   // August
-  {date:'2026-08-01',team:'Team 1',opponent:'Malahide',time:'',notes:''},
-  {date:'2026-08-02',team:'Team 2',opponent:'Greystones',time:'',notes:''},
-  {date:'2026-08-02',team:'Team 3',opponent:'Mullingar',time:'',notes:''},
-  {date:'2026-08-08',team:'Team 3',opponent:'Finglas',time:'',notes:''},
-  {date:'2026-08-09',team:'Team 1',opponent:'Rush',time:'',notes:''},
-  {date:'2026-08-15',team:'Team 1',opponent:'Tyrrelstown',time:'',notes:''},
-  {date:'2026-08-15',team:'Team 2',opponent:'Rush',time:'',notes:''},
-  {date:'2026-08-22',team:'Team 1',opponent:'North Kildare',time:'',notes:''},
-  {date:'2026-08-22',team:'Team 2',opponent:'Leinster',time:'',notes:''},
+  {date:'2026-08-01',team:'Team 1',opponent:'Malahide',time:'',notes:'',venue:'A'},
+  {date:'2026-08-02',team:'Team 2',opponent:'Greystones',time:'',notes:'',venue:'H'},
+  {date:'2026-08-02',team:'Team 3',opponent:'Mullingar',time:'',notes:'',venue:'H'},
+  {date:'2026-08-08',team:'Team 3',opponent:'Finglas',time:'',notes:'',venue:'A'},
+  {date:'2026-08-09',team:'Team 1',opponent:'Rush',time:'',notes:'',venue:'H'},
+  {date:'2026-08-15',team:'Team 1',opponent:'Tyrrelstown',time:'',notes:'',venue:'A'},
+  {date:'2026-08-15',team:'Team 2',opponent:'Rush',time:'',notes:'',venue:'H'},
+  {date:'2026-08-22',team:'Team 1',opponent:'North Kildare',time:'',notes:'',venue:'A'},
+  {date:'2026-08-22',team:'Team 2',opponent:'Leinster',time:'',notes:'',venue:'H'},
   // September
-  {date:'2026-09-05',team:'Team 1',opponent:'DLR County',time:'',notes:''},
-  {date:'2026-09-06',team:'Team 2',opponent:'Leinster',time:'',notes:''},
-  {date:'2026-09-06',team:'Team 3',opponent:'Knockharley',time:'',notes:''},
-  {date:'2026-09-12',team:'Team 1',opponent:'Clontarf',time:'',notes:''},
-  // Women
-  {date:'2026-04-25',team:'Women',opponent:'Naas',time:'12pm',notes:'T20 · Women v Carlow'},
-  {date:'2026-04-26',team:'Women',opponent:"Women's T20",time:'11am',notes:''},
+  {date:'2026-09-05',team:'Team 1',opponent:'DLR County',time:'',notes:'',venue:'A'},
+  {date:'2026-09-05',team:'Team 2',opponent:'Leinster',time:'',notes:'',venue:'A'},
+  {date:'2026-09-06',team:'Team 3',opponent:'Knockharley',time:'',notes:'',venue:'A'},
+  {date:'2026-09-12',team:'Team 1',opponent:'Clontarf',time:'',notes:'',venue:'A'},
 ];
 
 const MONTH_NAMES = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 const MONTH_FULL  = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 
 let schedTeam = 'all';
+let schedVenue = 'all';
+function setSchedVenue(v, btn) {
+  schedVenue = v;
+  document.querySelectorAll('.sub-tabs:has([onclick*="setSchedVenue"]) .sub-tab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderFixedSchedule();
+}
 
 function setSchedTeam(team, btn) {
   schedTeam = team;
@@ -2157,6 +2209,7 @@ function renderFixedSchedule() {
   const today = todayStr();
   let fixtures = FIXED_SCHEDULE;
   if (schedTeam !== 'all') fixtures = fixtures.filter(f => f.team === schedTeam);
+  if (schedVenue !== 'all') fixtures = fixtures.filter(f => f.venue === schedVenue);
 
   // Group by month
   const byMonth = {};
@@ -2179,11 +2232,34 @@ function renderFixedSchedule() {
       const d = new Date(f.date + 'T12:00:00');
       const day = d.getDate();
       const mon = MONTH_NAMES[d.getMonth()];
-      const isPast = f.date < today;
-      const isToday = f.date === today;
+      const isPast = f.date <= today;
+      const isToday = false;
       const metaParts = [];
       if (f.time) metaParts.push(f.time);
       if (f.notes) metaParts.push(f.notes);
+      const venueBadge = f.venue === 'H'
+        ? '<span style="font-size:10px;font-weight:700;padding:1px 6px;border-radius:3px;background:rgba(245,158,11,.15);color:#b45309;margin-left:6px;">HOME</span>'
+        : f.venue === 'A'
+        ? '<span style="font-size:10px;font-weight:700;padding:1px 6px;border-radius:3px;background:rgba(59,130,246,.12);color:#2563eb;margin-left:6px;">AWAY</span>'
+        : '';
+      // Look up result for past fixtures
+      const fKey = f.date + '_' + f.team + '_' + f.opponent.replace(/\s/g, '');
+      const fResult = isPast ? results.find(r => r.matchId === fKey) : null;
+      const resultLabels = {win:'Won', loss:'Lost', draw:'Draw', 'washed out':'Washed', 'no result':'N/R', 'abandoned':'Aband.'};
+      const resultBadge = fResult
+        ? '<span class="sched-result-badge ' + (fResult.result==='win'?'win':fResult.result==='loss'?'loss':fResult.result==='washed out'?'washed':'draw') + '">' + (resultLabels[fResult.result]||fResult.result) + '</span>'
+        : '';
+
+      const tenDaysLimit = new Date(); tenDaysLimit.setDate(tenDaysLimit.getDate() + 10);
+      const tenDaysLimitStr = tenDaysLimit.toISOString().slice(0,10);
+      const showAvailBtn = !isPast && f.date <= tenDaysLimitStr;
+      const availBtn = showAvailBtn
+        ? '<button class="btn btn-sm btn-primary" style="margin-top:8px;width:100%;"'
+          + ' data-key="' + fKey + '" data-opp="' + f.opponent + '" data-date="' + f.date + '" data-team="' + f.team + '" data-time="' + (f.time||'') + '"'
+          + ' onclick="openAvailModal(this.dataset.key,this.dataset.opp,this.dataset.date,this.dataset.team,this.dataset.time)">'
+          + '&#x270F; Mark Availability</button>'
+        : '';
+
       return `<div class="sched-fixture${isPast?' past':''}${isToday?' sched-today':''}">
         <div class="sched-date-block">
           <div class="sched-day">${day}</div>
@@ -2191,11 +2267,12 @@ function renderFixedSchedule() {
         </div>
         <div class="sched-divider"></div>
         <div class="sched-body">
-          <div class="sched-opponent">${f.opponent}</div>
+          <div class="sched-opponent">${f.opponent}${venueBadge}${resultBadge}${isPast?' &#x1F512;':''}</div>
           <div class="sched-meta">
             <span class="sched-tag ${schedTagClass(f.team)}">${f.team}</span>
             ${metaParts.join(' &middot; ')}
           </div>
+          ${availBtn}
         </div>
       </div>`;
     }).join('');
@@ -2433,7 +2510,10 @@ function renderThisWeek() {
   const todayStr2 = today.toISOString().slice(0,10);
   const weekEndStr = weekEnd.toISOString().slice(0,10);
 
-  const upcoming = FIXED_SCHEDULE.filter(f => f.date >= todayStr2 && f.date <= weekEndStr);
+  const tenDaysEnd = new Date(today);
+  tenDaysEnd.setDate(tenDaysEnd.getDate() + 10);
+  const tenDaysStr = tenDaysEnd.toISOString().slice(0,10);
+  const upcoming = FIXED_SCHEDULE.filter(f => f.date > todayStr2 && f.date <= tenDaysStr);
 
   const wrap = document.getElementById('this-week-wrap');
   const list = document.getElementById('this-week-list');
