@@ -1060,7 +1060,7 @@ function setSyncStatus(state, msg) {
   }
 }
 
-async function syncToSheet(tab, headers, row) {
+async function syncToSheet(tab, headers, row, upsertKey) {
   if (!SCRIPT_URL) return;
   setSyncStatus('syncing', 'Saving...');
   try {
@@ -1068,7 +1068,7 @@ async function syncToSheet(tab, headers, row) {
       method: 'POST',
       mode: 'no-cors',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ tab, headers, row })
+      body: JSON.stringify({ tab, headers, row, upsertKey: upsertKey || null })
     });
     setSyncStatus('ok', 'Saved');
   } catch (err) {
@@ -1336,7 +1336,8 @@ function saveResult() {
 
   syncToSheet('Results',
     ['ID','Match ID','Date','Opponent','Team','Result','Athlone Score','Opponent Score','Star Performers','Summary','Saved At'],
-    [d.id, d.matchId, date, opponent, d.team||'', d.result, d.ourScore||'', d.theirScore||'', d.stars||'', d.notes||'', d.savedAt]
+    [d.id, d.matchId, date, opponent, d.team||'', d.result, d.ourScore||'', d.theirScore||'', d.stars||'', d.notes||'', d.savedAt],
+    'Match ID'
   );
 }
 
@@ -2608,7 +2609,8 @@ function saveAvailability() {
   const liftStr = Object.entries(lifts).map(([n,loc]) => n + ' (' + loc + ')').join(', ');
   syncToSheet('Availability',
     ['Fixture Key','Available','Maybe','Unavailable','Lifts Needed','Updated At'],
-    [key, yes, maybe, no, liftStr, new Date().toISOString()]
+    [key, yes, maybe, no, liftStr, new Date().toISOString()],
+    'Fixture Key'
   );
 
   const btn = document.querySelector('#modal-avail .btn-primary');
