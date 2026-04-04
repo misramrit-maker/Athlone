@@ -699,11 +699,18 @@
   <!-- RESULTS -->
   <div id="page-results" class="page">
     <div class="page-header"><div class="page-title">Results</div></div>
+    <div class="sub-tabs" id="results-team-tabs" style="margin-bottom:16px;">
+      <button class="sub-tab active" onclick="setResultsTeam('all',this)">All</button>
+      <button class="sub-tab" onclick="setResultsTeam('Team 1',this)">Team 1</button>
+      <button class="sub-tab" onclick="setResultsTeam('Team 2',this)">Team 2</button>
+      <button class="sub-tab" onclick="setResultsTeam('Team 3',this)">Team 3</button>
+      <button class="sub-tab" onclick="setResultsTeam('Women',this)">Women</button>
+    </div>
     <div class="stats-grid" id="stats-grid"></div>
     <div class="card table-wrap">
       <table>
         <thead>
-          <tr><th>Date</th><th>Opponent</th><th>Venue</th><th>Result</th><th>Scores</th><th>Player of Match</th><th>Notes</th><th></th></tr>
+          <tr><th>Date</th><th>Team</th><th>Opponent</th><th>Result</th><th>Scores</th><th>Summary</th><th></th></tr>
         </thead>
         <tbody id="results-tbody"></tbody>
       </table>
@@ -934,20 +941,42 @@
   <div id="modal-result" class="modal hidden">
     <div class="modal-title">Record Result</div>
     <input type="hidden" id="r-mid">
-    <div class="form-row"><label>Result</label>
-      <select id="r-res"><option value="win">Win</option><option value="loss">Loss</option><option value="draw">Draw</option><option value="no result">No result</option><option value="abandoned">Abandoned</option></select>
+    <div class="form-2col">
+      <div class="form-row"><label>Team</label>
+        <select id="r-team">
+          <option value="Team 1">Team 1</option>
+          <option value="Team 2">Team 2</option>
+          <option value="Team 3">Team 3</option>
+          <option value="Women">Women</option>
+        </select>
+      </div>
+      <div class="form-row"><label>Result</label>
+        <select id="r-res">
+          <option value="win">Won</option>
+          <option value="loss">Lost</option>
+          <option value="draw">Draw</option>
+          <option value="washed out">Washed Out</option>
+          <option value="no result">No Result</option>
+          <option value="abandoned">Abandoned</option>
+        </select>
+      </div>
     </div>
     <div class="form-2col">
       <div class="form-row"><label>Athlone CC score</label><input type="text" id="r-us" placeholder="e.g. 152/7 (20)"></div>
       <div class="form-row"><label>Opponent score</label><input type="text" id="r-them" placeholder="e.g. 148/9 (20)"></div>
     </div>
-    <div class="form-row"><label>Player of the match</label><select id="r-potm"><option value="">â none â</option></select></div>
-    <div class="form-row"><label>Match notes</label><textarea id="r-notes" rows="3" placeholder="Key moments, highlightsâ¦"></textarea></div>
+
+    <div class="form-row"><label>Star Performers</label>
+      <input type="text" id="r-stars" placeholder="e.g. Varun Rao 6-24, George Jebaraj 87">
+    </div>
+    <div class="form-row"><label>Match Summary</label>
+      <textarea id="r-notes" rows="4" placeholder="Brief summary of the team performance..."></textarea>
+    </div>
     <div class="modal-footer">
       <button class="btn" onclick="closeModal()">Cancel</button>
       <button class="btn btn-primary" onclick="saveResult()">Save Result</button>
     </div>
-  </div>
+  </div></div>
 
   <!-- Album -->
   <div id="modal-album" class="modal hidden">
@@ -968,7 +997,7 @@
 
 </div>
 
-<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+<script>
 // âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 // GOOGLE SHEETS CONFIG
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzkQUxZ4gDu9GqMjEzteSMcqNei3vC5g2B5WQxeCB7Wmmsjgnvco1LpXc82Yf14GQn3/exec';
@@ -1047,7 +1076,7 @@ function showPage(name, btn) {
   document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
   document.getElementById('page-'+name).classList.add('active');
   if (btn) btn.classList.add('active');
-  ({players:renderPlayers,schedule:()=>{renderSchedule();renderFixedSchedule();renderThisWeek();},selection:renderSelectionPage,results:renderResults,photos:renderPhotos,stats:renderStats,kit:renderKit,practice:renderPractice})[name]?.();
+  ({players:renderPlayers,schedule:()=>{renderSchedule();renderFixedSchedule();renderThisWeek();},selection:renderSelectionPage,results:()=>{renderResults();},photos:renderPhotos,stats:renderStats,kit:renderKit,practice:renderPractice})[name]?.();
 }
 
 function updateHeader() {
@@ -1226,26 +1255,33 @@ function renderSchedule() {
 
 // ââ RESULT MODAL âââââââââââââââââââââââââââââââââââââââââ
 function openResultModal(mid) {
-  const r=results.find(x=>x.matchId===mid);
-  document.getElementById('r-mid').value=mid;
-  document.getElementById('r-res').value=r?.result||'win';
-  document.getElementById('r-us').value=r?.ourScore||'';
-  document.getElementById('r-them').value=r?.theirScore||'';
-  document.getElementById('r-notes').value=r?.notes||'';
-  const sel=(selections[mid]||[]).map(id=>players.find(p=>p.id===id)).filter(Boolean);
-  const opts=(sel.length?sel:players).sort((a,b)=>a.lastName.localeCompare(b.lastName));
-  document.getElementById('r-potm').innerHTML='<option value="">â none â</option>'+opts.map(p=>`<option value="${p.id}" ${r?.potm===p.id?'selected':''}>${full(p)}</option>`).join('');
+  const r = results.find(x => x.matchId === mid);
+  // Auto-detect team from fixture (fixed schedule or user matches)
+  const fixedF = FIXED_SCHEDULE.find(f => (f.date + '_' + f.team + '_' + f.opponent.replace(/\s/g,'')) === mid);
+  const userM  = matches.find(m => m.id === mid);
+  const autoTeam = r?.team || (fixedF ? fixedF.team : '') || 'Team 1';
+  document.getElementById('r-mid').value = mid;
+  document.getElementById('r-team').value = autoTeam;
+  document.getElementById('r-res').value = r?.result || 'win';
+  document.getElementById('r-us').value = r?.ourScore || '';
+  document.getElementById('r-them').value = r?.theirScore || '';
+  document.getElementById('r-stars').value = r?.stars || '';
+  document.getElementById('r-notes').value = r?.notes || '';
+
   showModal('modal-result');
 }
 
 function saveResult() {
   const mid=document.getElementById('r-mid').value;
   const match=matches.find(m=>m.id===mid);
-  const potmId=document.getElementById('r-potm').value;
-  const potmPlayer=potmId?players.find(p=>p.id===potmId):null;
-  const d={id:uid(),matchId:mid,result:document.getElementById('r-res').value,
-    ourScore:document.getElementById('r-us').value.trim(),theirScore:document.getElementById('r-them').value.trim(),
-    potm:potmId,notes:document.getElementById('r-notes').value.trim(),savedAt:new Date().toISOString()};
+  const d={id:uid(),matchId:mid,
+    team:document.getElementById('r-team').value,
+    result:document.getElementById('r-res').value,
+    ourScore:document.getElementById('r-us').value.trim(),
+    theirScore:document.getElementById('r-them').value.trim(),
+    stars:document.getElementById('r-stars').value.trim(),
+    notes:document.getElementById('r-notes').value.trim(),
+    savedAt:new Date().toISOString()};
   const i=results.findIndex(x=>x.matchId===mid);
   if(i>=0)results[i]=d;else results.push(d);
   sv(K.r,results);closeModal();renderSchedule();renderResults();updateHeader();
@@ -1328,30 +1364,86 @@ function clearSelection() {
 }
 
 // ââ RESULTS ââââââââââââââââââââââââââââââââââââââââââââââ
-function renderResults() {
-  const played=results.filter(r=>!['abandoned','no result'].includes(r.result));
-  const won=results.filter(r=>r.result==='win').length;
-  const lost=results.filter(r=>r.result==='loss').length;
-  const drawn=results.filter(r=>r.result==='draw').length;
-  const pct=played.length?Math.round(won/played.length*100):0;
-  document.getElementById('stats-grid').innerHTML=[['Played',played.length],['Won',won],['Lost',lost],['Drawn',drawn],['Win %',pct+'%']].map(([l,v])=>`<div class="stat-card"><div class="stat-val">${v}</div><div class="stat-label">${l}</div></div>`).join('');
-  const sorted=[...results].map(r=>({...r,match:matches.find(m=>m.id===r.matchId)})).filter(r=>r.match).sort((a,b)=>b.match.date.localeCompare(a.match.date));
-  const tbody=document.getElementById('results-tbody');
-  if(!sorted.length){tbody.innerHTML='<tr><td colspan="8" style="text-align:center;color:var(--text3);padding:28px;">No results recorded yet.</td></tr>';return;}
-  tbody.innerHTML=sorted.map(r=>{
-    const cls=r.result==='win'?'result-win':r.result==='loss'?'result-loss':'result-draw';
-    const potmP=r.potm?players.find(p=>p.id===r.potm):null;
-    return`<tr>
-      <td style="white-space:nowrap">${fmtDate(r.match.date)}</td>
-      <td style="font-weight:600;color:var(--text)">${r.match.opponent}</td>
-      <td>${r.match.venue||'â'}</td>
-      <td class="${cls}">${r.result.charAt(0).toUpperCase()+r.result.slice(1)}</td>
-      <td style="font-size:12px;white-space:nowrap">${r.ourScore||'â'}${r.theirScore?' / '+r.theirScore:''}</td>
-      <td style="font-size:12px">${potmP?'â­ '+full(potmP):'â'}</td>
-      <td style="font-size:12px;color:var(--text3);">${r.notes||''}</td>
-      <td><button class="btn btn-sm" onclick="openResultModal('${r.matchId}')">Edit</button></td>
-    </tr>`;}).join('');
+
+let resultsTeam = 'all';
+function setResultsTeam(team, btn) {
+  resultsTeam = team;
+  document.querySelectorAll('#results-team-tabs .sub-tab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderResults();
 }
+function renderResults() {
+  var today = todayStr();
+  var allFixtures = [];
+
+  FIXED_SCHEDULE.filter(function(f) { return f.date <= today; }).forEach(function(f) {
+    var key = f.date + '_' + f.team + '_' + f.opponent.replace(/\s/g,'');
+    allFixtures.push({ id: key, date: f.date, opponent: f.opponent, team: f.team, venue: '' });
+  });
+
+  matches.filter(function(m) { return m.date <= today; }).forEach(function(m) {
+    allFixtures.push({ id: m.id, date: m.date, opponent: m.opponent, team: m.homeaway||'', venue: m.venue||'' });
+  });
+
+  allFixtures.sort(function(a,b) { return b.date.localeCompare(a.date); });
+
+  var filtered = resultsTeam === 'all' ? allFixtures : allFixtures.filter(function(f) { return f.team === resultsTeam; });
+
+  var recordedResults = resultsTeam === 'all' ? results : results.filter(function(r) { return r.team === resultsTeam; });
+  var played  = recordedResults.filter(function(r) { return ['win','loss','draw'].includes(r.result); });
+  var won     = recordedResults.filter(function(r) { return r.result === 'win'; }).length;
+  var lost    = recordedResults.filter(function(r) { return r.result === 'loss'; }).length;
+  var drawn   = recordedResults.filter(function(r) { return r.result === 'draw'; }).length;
+  var washed  = recordedResults.filter(function(r) { return r.result === 'washed out'; }).length;
+  var pct     = played.length ? Math.round(won / played.length * 100) : 0;
+
+  document.getElementById('stats-grid').innerHTML = [
+    ['Played', played.length], ['Won', won], ['Lost', lost],
+    ['Drawn', drawn], ['Washed', washed], ['Win %', pct + '%']
+  ].map(function(x) {
+    return '<div class="stat-card"><div class="stat-val">' + x[1] + '</div><div class="stat-label">' + x[0] + '</div></div>';
+  }).join('');
+
+  var tbody = document.getElementById('results-tbody');
+  if (!filtered.length) {
+    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--text3);padding:28px;">No past fixtures yet.</td></tr>';
+    return;
+  }
+
+  var resultLabels = { win:'Won', loss:'Lost', draw:'Draw', 'washed out':'Washed Out', 'no result':'No Result', 'abandoned':'Abandoned' };
+
+  tbody.innerHTML = filtered.map(function(f) {
+    var r = results.find(function(x) { return x.matchId === f.id; });
+    var potmP = r && r.potm ? players.find(function(p) { return p.id === r.potm; }) : null;
+    var teamCls = f.team === 'Team 1' ? 'team-1' : f.team === 'Team 2' ? 'team-2' : f.team === 'Team 3' ? 'team-3' : f.team === 'Women' ? 'badge-purple' : 'sched-tag-fr';
+
+    var resultCell = '<span style="color:var(--text3);font-size:12px;">pending</span>';
+    if (r) {
+      var cls = r.result === 'win' ? 'result-win' : r.result === 'loss' ? 'result-loss' : 'result-draw';
+      resultCell = '<span class="' + cls + '">' + (resultLabels[r.result] || r.result) + '</span>';
+    }
+
+    var scoreCell  = r ? ((r.ourScore || '—') + (r.theirScore ? ' / ' + r.theirScore : '')) : '—';
+    var potmCell   = potmP ? '&#x2B50; ' + full(potmP) : '—';
+    var starsHTML  = (r && r.stars) ? '<div style="font-weight:600;color:var(--text2);margin-bottom:2px;">&#x1F3CF; ' + r.stars + '</div>' : '';
+    var notesHTML  = (r && r.notes) ? '<div style="color:var(--text3);">' + r.notes + '</div>' : '';
+    var btnLabel   = r ? 'Edit' : '+ Result';
+
+    return '<tr>'
+      + '<td style="white-space:nowrap">' + fmtDate(f.date) + '</td>'
+      + '<td><span class="team-pill ' + teamCls + '">' + f.team + '</span></td>'
+      + '<td style="font-weight:600;color:var(--text)">' + f.opponent + '</td>'
+      + '<td>' + resultCell + '</td>'
+      + '<td style="font-size:12px;white-space:nowrap">' + scoreCell + '</td>'
+
+      + '<td style="font-size:12px;max-width:180px;">' + starsHTML + notesHTML + '</td>'
+      + '<td><button class="btn btn-sm" onclick="openResultModal(this.dataset.id)" data-id="' + f.id + '">' + btnLabel + '</button></td>'
+      + '</tr>';
+  }).join('');
+}
+
+
+
 
 // ââ PHOTOS âââââââââââââââââââââââââââââââââââââââââââââââ
 function openAddAlbum(){document.getElementById('al-name').value='';document.getElementById('al-url').value='';showModal('modal-album');}
