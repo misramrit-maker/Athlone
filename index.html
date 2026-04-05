@@ -1206,7 +1206,7 @@ function filterPlayers(f,btn) {
 }
 
 function renderPlayers() {
-  players.sort((a,b)=>a.firstName.localeCompare(b.firstName)||a.lastName.localeCompare(b.lastName));
+  players.sort((a,b) => a.firstName.localeCompare(b.firstName) || a.lastName.localeCompare(b.lastName));
   let list=[...players];
   if(pFilter==='starred')list=list.filter(p=>p.starred);
   else if(pFilter==='Female')list=list.filter(p=>p.gender==='Female');
@@ -1365,24 +1365,39 @@ function renderSelectionPage() {
     return { id: f.date+'_'+f.team+'_'+f.opponent.replace(/\s/g,''), date:f.date, opponent:f.opponent, team:f.team };
   });
 
-  // User-added matches in next 10 days
+  // User-added matches in next 10 days (deduplicate against fixed schedule by date+opponent)
   var userUp = matches.filter(function(m) {
-    return m.date > today && m.date <= tenDaysStr;
+    if (m.date <= today || m.date > tenDaysStr) return false;
+    // Skip if same date+opponent already exists in fixed schedule
+    return !fixedUp.find(function(f) {
+      return f.date === m.date && f.opponent.toLowerCase() === (m.opponent||'').toLowerCase();
+    });
   }).map(function(m) {
     return { id:m.id, date:m.date, opponent:m.opponent, team:m.homeaway||'' };
   });
 
-  var up = fixedUp.concat(userUp).sort(function(a,b){ return a.date.localeCompare(b.date); });
+  var up = fixedUp.concat(userUp).sort(function(a,b){ return a.date.localeCompare(b.date) || a.team.localeCompare(b.team); });
 
   var sel = document.getElementById('sel-fixture');
   var prev = sel.value;
   sel.innerHTML = '<option value="">-- select a fixture --</option>' +
     up.map(function(f) {
-      return '<option value="'+f.id+'"'+(f.id===prev?' selected':'')+'>'+fmtDate(f.date)+' · '+f.team+' vs '+f.opponent+'</option>';
+      var label = fmtDate(f.date) + ' · ' + (f.team ? f.team + ' vs ' : 'vs ') + f.opponent;
+      return '<option value="'+f.id+'"'+(f.id===prev?' selected':'')+'>'+label+'</option>';
     }).join('');
   if (!up.length) sel.innerHTML = '<option value="">No fixtures in next 10 days</option>';
   if (prev && up.find(function(f){ return f.id===prev; })) loadSelection();
   else document.getElementById('sel-panel').classList.add('hidden');
+}
+
+var selSortAlpha = false;
+function toggleSelSort(btn) {
+  selSortAlpha = !selSortAlpha;
+  btn.textContent = selSortAlpha ? 'Role Sort' : 'A-Z Sort';
+  btn.style.background = selSortAlpha ? 'var(--accent)' : '';
+  btn.style.color = selSortAlpha ? 'var(--bg)' : '';
+  var mid = document.getElementById('sel-fixture').value;
+  if (mid) { var sel = selections[mid]||[]; renderSelList(mid,sel); }
 }
 
 function loadSelection() {
@@ -1409,6 +1424,7 @@ function renderSelList(mid, sel) {
   }
 
   listPlayers.sort(function(a,b){
+    if (selSortAlpha) return a.firstName.localeCompare(b.firstName) || a.lastName.localeCompare(b.lastName);
     return (b.starred?1:0)-(a.starred?1:0) || a.role.localeCompare(b.role) || a.firstName.localeCompare(b.firstName);
   });
 
