@@ -626,6 +626,62 @@
   .kit-table tr.k-fair td:first-child { border-left: 3px solid #f59e0b; }
   .kit-table tr.k-needs td:first-child { border-left: 3px solid #ef4444; }
 
+
+  /* Home Page */
+  .home-section-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 16px; font-weight: 700;
+    color: var(--text); margin-bottom: 10px;
+  }
+  .home-empty { font-size: 13px; color: var(--text3); padding: 12px 0; }
+
+  /* Small fixture boxes grid */
+  .home-fixture-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+  .home-fix-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 10px 10px 8px;
+    transition: border-color .15s;
+  }
+  .home-fix-box:hover { border-color: var(--accent); }
+  .home-fix-box-date {
+    font-size: 11px; font-weight: 600;
+    color: var(--accent); margin-bottom: 4px;
+    text-transform: uppercase; letter-spacing: .03em;
+  }
+  .home-fix-box-opp {
+    font-size: 13px; font-weight: 700;
+    color: var(--text); margin-bottom: 6px;
+    line-height: 1.3;
+  }
+  .home-fix-box-meta {
+    display: flex; flex-wrap: wrap; gap: 4px; align-items: center;
+  }
+
+  /* Practice card (wider, list style) */
+  .home-fixture-card {
+    display: flex; align-items: center; gap: 12px;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 10px 14px;
+    margin-bottom: 8px; transition: border-color .15s;
+  }
+  .home-fixture-card:hover { border-color: var(--accent); }
+  .home-fix-date { text-align: center; min-width: 40px; flex-shrink: 0; }
+  .home-fix-day { font-size: 22px; font-weight: 800; color: var(--accent); line-height: 1; }
+  .home-fix-mon { font-size: 11px; color: var(--text3); text-transform: uppercase; letter-spacing: .05em; }
+  .home-fix-body { flex: 1; min-width: 0; }
+  .home-fix-opp { font-weight: 700; font-size: 14px; color: var(--text); margin-bottom: 3px; }
+  .home-fix-meta { font-size: 12px; color: var(--text3); display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+  .home-venue-badge { font-size: 10px; font-weight: 700; padding: 1px 5px; border-radius: 3px; margin-left: 4px; vertical-align: middle; }
+  .home-venue-h { background: rgba(245,158,11,.15); color: #b45309; }
+  .home-venue-a { background: rgba(59,130,246,.12); color: #2563eb; }
+
 </style>
 </head>
 <body>
@@ -652,7 +708,8 @@
 
   <!-- NAV -->
   <nav>
-    <button class="nav-btn active" onclick="showPage('players', this)">Players</button>
+    <button class="nav-btn active" onclick="showPage('home', this)">&#x1F3E0; Home</button>
+    <button class="nav-btn" onclick="showPage('players', this)">Players</button>
     <button class="nav-btn" onclick="showPage('schedule', this)">Schedule</button>
     <button class="nav-btn" onclick="showPage('selection', this)">Selection</button>
     <button class="nav-btn" onclick="showPage('results', this)">Results</button>
@@ -662,8 +719,14 @@
     <button class="nav-btn" onclick="showPage('practice', this)">Practice</button>
   </nav>
 
+  <!-- HOME -->
+  <div id="page-home" class="page active">
+    <div id="home-upcoming-matches"></div>
+    <div id="home-practice-sessions"></div>
+  </div>
+
   <!-- PLAYERS -->
-  <div id="page-players" class="page active">
+  <div id="page-players" class="page">
     <div class="page-header">
       <div>
         <div class="page-title">Squad</div>
@@ -1411,39 +1474,50 @@ function loadSelection() {
 
 function renderSelList(mid, sel) {
   var avail = availability[mid] || {};
-  var availNames = Object.entries(avail).filter(function(e){ return e[1]==='yes'||e[1]==='maybe'; }).map(function(e){ return e[0]; });
+  var availEntries = Object.entries(avail).filter(function(e) {
+    return e[1] === 'yes' || e[1] === 'maybe';
+  });
+  var availNames = availEntries.map(function(e) { return e[0].trim().toLowerCase(); });
   var hasAvail = availNames.length > 0;
 
-  // Players who marked available/maybe + already selected
+  // Match players by case-insensitive full name
   var listPlayers;
   if (hasAvail) {
-    var availPs = players.filter(function(p){ return availNames.includes(full(p)); });
-    var selectedPs = players.filter(function(p){ return sel.includes(p.id) && !availPs.find(function(ap){ return ap.id===p.id; }); });
+    var availPs = players.filter(function(p) {
+      var pFull = full(p).trim().toLowerCase();
+      return availNames.some(function(n) { return n === pFull; });
+    });
+    // Include already-selected not in avail list
+    var selectedPs = players.filter(function(p) {
+      return sel.includes(p.id) && !availPs.find(function(ap) { return ap.id === p.id; });
+    });
     listPlayers = availPs.concat(selectedPs);
   } else {
     listPlayers = players.slice();
   }
 
-  listPlayers.sort(function(a,b){
-    if (selSortAlpha) return a.firstName.localeCompare(b.firstName) || a.lastName.localeCompare(b.lastName);
-    return (b.starred?1:0)-(a.starred?1:0) || a.role.localeCompare(b.role) || a.firstName.localeCompare(b.firstName);
+  listPlayers.sort(function(a, b) {
+    return a.firstName.localeCompare(b.firstName) || a.lastName.localeCompare(b.lastName);
   });
 
   var header = hasAvail
-    ? '<div style="font-size:12px;color:var(--text3);margin-bottom:8px;">&#x2705; Showing '+listPlayers.length+' players who marked availability</div>'
-    : '<div style="font-size:12px;color:var(--text3);margin-bottom:8px;">No availability marked yet — showing full squad</div>';
+    ? '<div style="font-size:12px;color:var(--text3);margin-bottom:8px;">Showing ' + listPlayers.length + ' players who marked availability</div>'
+    : '<div style="font-size:12px;color:var(--text3);margin-bottom:8px;">No availability marked yet - showing full squad</div>';
 
   document.getElementById('sel-list').innerHTML = header + listPlayers.map(function(p) {
-    var status = avail[full(p)];
-    var icon = status==='yes' ? ' <span style="color:#059669;font-size:12px;">&#x2705;</span>'
-             : status==='maybe' ? ' <span style="color:#d97706;font-size:12px;">&#x1F914;</span>' : '';
+    var pFull = full(p).trim().toLowerCase();
+    var statusEntry = availEntries.find(function(e) { return e[0].trim().toLowerCase() === pFull; });
+    var status = statusEntry ? statusEntry[1] : '';
+    var icon = status === 'yes' ? ' <span style="color:#059669;font-size:12px;">&#x2705;</span>'
+             : status === 'maybe' ? ' <span style="color:#d97706;font-size:12px;">&#x1F914;</span>' : '';
+    var isChecked = sel.includes(p.id) ? ' checked' : '';
     return '<label class="player-check">'
-      + '<input type="checkbox" value="'+p.id+'"'+(sel.includes(p.id)?' checked':'')+'" data-mid="'+mid+'" onchange="onSelChange(this.dataset.mid)">'
-      + '<div class="avatar" style="width:30px;height:30px;min-width:30px;font-size:12px;">'+init(p)+'</div>'
+      + '<input type="checkbox" value="' + p.id + '" data-mid="' + mid + '" onchange="onSelChange(this.dataset.mid)"' + isChecked + '>'
+      + '<div class="avatar" style="width:30px;height:30px;min-width:30px;font-size:12px;">' + init(p) + '</div>'
       + '<div style="flex:1;">'
-      + '<span style="font-weight:600">'+full(p)+'</span>'+icon
-      + (p.starred?'<span style="color:var(--gold);font-size:14px;margin-left:4px;">&#x2605;</span>':'')
-      + '<span class="badge '+roleClass(p.role)+'" style="margin-left:6px;">'+p.role+'</span>'
+      + '<span style="font-weight:600">' + full(p) + '</span>' + icon
+      + (p.starred ? '<span style="color:var(--gold);font-size:14px;margin-left:4px;">&#x2605;</span>' : '')
+      + '<span class="badge ' + roleClass(p.role) + '" style="margin-left:6px;">' + p.role + '</span>'
       + '</div></label>';
   }).join('');
   updateSelCount();
@@ -1647,24 +1721,48 @@ if (!SCRIPT_URL) document.getElementById('config-banner').classList.remove('hidd
 // ── Convert sheet rows (array of arrays) back to app objects ──
 function rowsToPlayers(rows) {
   if (!rows || rows.length < 2) return [];
-  // headers: ID, First Name, Last Name, Role, Gender, Batting Style, Bowling Style, Notes, Starred, Vehicle Reg, Saved At
-  const map = {};
+  // Use header row to map columns safely
+  const headers = rows[0].map(h => String(h||'').trim());
+  const ci = name => { const i = headers.indexOf(name); return i >= 0 ? i : null; };
+  const get = (r, name, fallback, def) => {
+    const i = ci(name);
+    return i !== null ? String(r[i]||def||'') : String(r[fallback]||def||'');
+  };
+
+  // First pass: dedup by ID (keep latest savedAt)
+  const byId = {};
   rows.slice(1).forEach(r => {
-    const id = String(r[0]||'').trim();
-    if (!id) return;
-    const savedAt = String(r[10]||'');
-    // Keep only the latest entry per ID
-    if (!map[id] || savedAt > map[id].savedAt) {
-      map[id] = {
-        id, firstName: String(r[1]||''), lastName: String(r[2]||''),
-        role: String(r[3]||'Batsman'), gender: String(r[4]||'Male'),
-        batting: String(r[5]||''), bowling: String(r[6]||''),
-        notes: String(r[7]||''), starred: r[8]==='Yes'||r[8]===true,
-        vrn: String(r[9]||''), savedAt
+    const id = String(r[ci('ID') !== null ? ci('ID') : 0]||'').trim();
+    if (!id || id === 'ID') return;
+    const savedAt = get(r, 'Saved At', 10, '');
+    if (!byId[id] || savedAt > (byId[id].savedAt||'')) {
+      byId[id] = {
+        id,
+        firstName: get(r, 'First Name', 1, ''),
+        lastName:  get(r, 'Last Name',  2, ''),
+        role:      get(r, 'Role',        3, 'Batsman'),
+        gender:    get(r, 'Gender',      4, 'Male'),
+        batting:   get(r, 'Batting Style', 5, ''),
+        bowling:   get(r, 'Bowling Style', 6, ''),
+        notes:     get(r, 'Notes',       7, ''),
+        starred:   (get(r, 'Starred',    8, '') === 'Yes') || r[ci('Starred') !== null ? ci('Starred') : 8] === true,
+        vrn:       get(r, 'Vehicle Reg', 9, ''),
+        savedAt
       };
     }
   });
-  return Object.values(map).filter(p => p.firstName);
+
+  // Second pass: dedup by full name (keep entry with ID, discard nameless dupes)
+  const byName = {};
+  Object.values(byId).forEach(p => {
+    if (!p.firstName) return;
+    const nameKey = (p.firstName + ' ' + p.lastName).trim().toLowerCase();
+    if (!byName[nameKey] || p.savedAt > (byName[nameKey].savedAt||'')) {
+      byName[nameKey] = p;
+    }
+  });
+
+  return Object.values(byName);
 }
 
 function rowsToMatches(rows) {
@@ -1882,6 +1980,74 @@ async function syncDeleteToSheet(tab, keyCol, keyVal) {
   }
 }
 
+
+function renderHome() {
+  var today = todayStr();
+  var tenDays = new Date(); tenDays.setDate(tenDays.getDate() + 10);
+  var tenStr = tenDays.toISOString().slice(0,10);
+
+  // ── Upcoming Fixtures (next 10 days) ──────────────────────
+  var upcoming = FIXED_SCHEDULE
+    .filter(function(f) { return f.date > today && f.date <= tenStr; })
+    .sort(function(a,b) { return a.date.localeCompare(b.date); });
+
+  var matchHTML = '<div class="home-section-title">&#x1F4C5; Upcoming Fixtures</div>';
+  if (!upcoming.length) {
+    matchHTML += '<div class="home-empty">No fixtures in the next 10 days</div>';
+  } else {
+    matchHTML += '<div class="home-fixture-grid">'
+      + upcoming.map(function(f) {
+          var d = new Date(f.date + 'T12:00:00');
+          var day = d.getDate();
+          var mon = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][d.getMonth()];
+          var weekday = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][d.getDay()];
+          var teamCls = f.team==='Team 1'?'team-1':f.team==='Team 2'?'team-2':f.team==='Team 3'?'team-3':f.team==='Women'?'badge-purple':'sched-tag-fr';
+          var venueBadge = f.venue==='H'
+            ? '<span class="home-venue-badge home-venue-h">H</span>'
+            : f.venue==='A'
+            ? '<span class="home-venue-badge home-venue-a">A</span>' : '';
+          return '<div class="home-fix-box">'
+            + '<div class="home-fix-box-date">' + weekday + ' ' + day + ' ' + mon + '</div>'
+            + '<div class="home-fix-box-opp">vs ' + f.opponent + venueBadge + '</div>'
+            + '<div class="home-fix-box-meta">'
+            + '<span class="team-pill ' + teamCls + '" style="font-size:10px;padding:1px 6px;">' + f.team + '</span>'
+            + (f.time ? '<span style="font-size:11px;color:var(--text3);">' + f.time + '</span>' : '')
+            + '</div>'
+            + '</div>';
+        }).join('')
+      + '</div>';
+  }
+  document.getElementById('home-upcoming-matches').innerHTML = matchHTML;
+
+  // ── Upcoming Practice Sessions ─────────────────────────────
+  var upcomingPractice = (practiceSessions||[])
+    .filter(function(s) { return s.date > today; })
+    .sort(function(a,b) { return a.date.localeCompare(b.date); })
+    .slice(0, 3);
+
+  var practiceHTML = '<div class="home-section-title" style="margin-top:20px;">&#x1F3CF; Upcoming Practice</div>';
+  if (!upcomingPractice.length) {
+    practiceHTML += '<div class="home-empty">No practice sessions scheduled</div>';
+  } else {
+    practiceHTML += upcomingPractice.map(function(s) {
+      var d = new Date(s.date + 'T12:00:00');
+      var day = d.getDate();
+      var mon = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][d.getMonth()];
+      var weekday = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][d.getDay()];
+      return '<div class="home-fixture-card">'
+        + '<div class="home-fix-date"><div class="home-fix-day">' + day + '</div><div class="home-fix-mon">' + weekday + ' ' + mon + '</div></div>'
+        + '<div class="home-fix-body">'
+        + '<div class="home-fix-opp">Practice Session'
+        + (s.venue ? ' &#x1F4CD; ' + s.venue : '') + '</div>'
+        + '<div class="home-fix-meta">' + (s.time ? fmtTime(s.time) : 'Time TBC')
+        + (s.attendees && s.attendees.length ? ' &middot; ' + s.attendees.length + ' attending' : '') + '</div>'
+        + '</div></div>';
+    }).join('');
+  }
+  document.getElementById('home-practice-sessions').innerHTML = practiceHTML;
+}
+
+
 async function loadFromSheets() {
   // Render local data immediately — app works without Sheets
   renderPlayers(); updateHeader(); renderFixedSchedule(); renderPractice();
@@ -1926,7 +2092,7 @@ function processSheetData(json) {
       sv(K.s, selections);
       updated = true;
     }
-    if (updated) { renderPlayers(); updateHeader(); renderFixedSchedule(); renderPractice(); renderThisWeek(); renderResults(); }
+    if (updated) { renderPlayers(); updateHeader(); renderFixedSchedule(); renderPractice(); renderThisWeek(); renderResults(); renderHome(); }
     setSyncStatus('ok', 'Sheets synced');
   } else {
     setSyncStatus('idle', 'Offline');
@@ -2314,6 +2480,7 @@ function renderFixedSchedule() {
 }
 
 renderFixedSchedule();
+
 // ── PRACTICE SESSIONS ────────────────────────────────────────
 let practiceSessions = ld('acc_practice') || [];
 
@@ -2352,6 +2519,7 @@ function savePracticeSession() {
   sv('acc_practice', practiceSessions);
   closePracticeModal();
   renderPractice();
+  renderHome();
   syncPracticeToSheet(d);
 }
 
@@ -2746,6 +2914,7 @@ function closeLightbox() {
 }
 document.addEventListener('keydown', e => { if (e.key === 'Escape') closeLightbox(); });
 
+renderHome();
 loadFromSheets();
 </script>
 
