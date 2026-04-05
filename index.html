@@ -1185,7 +1185,8 @@ function savePlayer() {
   // sort handled in renderPlayers
   sv(K.p,players);closeModal();renderPlayers();updateHeader();
   syncToSheet('Players',['ID','First Name','Last Name','Role','Gender','Batting Style','Bowling Style','Notes','Starred','Vehicle Reg','Saved At'],
-    [d.id,d.firstName,d.lastName,d.role,d.gender||'Male',d.batting||'',d.bowling||'',d.notes||'',d.starred?'Yes':'No',d.vrn||'',d.savedAt]);
+    [d.id,d.firstName,d.lastName,d.role,d.gender||'Male',d.batting||'',d.bowling||'',d.notes||'',d.starred?'Yes':'No',d.vrn||'',d.savedAt],
+    'ID');
 }
 
 function deletePlayer(id) {
@@ -1646,12 +1647,24 @@ if (!SCRIPT_URL) document.getElementById('config-banner').classList.remove('hidd
 // ── Convert sheet rows (array of arrays) back to app objects ──
 function rowsToPlayers(rows) {
   if (!rows || rows.length < 2) return [];
-  // headers: ID, First Name, Last Name, Role, Batting Style, Bowling Style, Notes, Starred, Saved At
-  return rows.slice(1).map(r => ({
-    id: String(r[0]), firstName: String(r[1]||''), lastName: String(r[2]||''),
-    role: String(r[3]||'Batsman'), gender: String(r[4]||'Male'), batting: String(r[5]||''), bowling: String(r[6]||''),
-    notes: String(r[7]||''), starred: r[8]==='Yes'||r[8]===true, vrn: String(r[9]||''), savedAt: String(r[10]||'')
-  })).filter(p => p.id && p.firstName);
+  // headers: ID, First Name, Last Name, Role, Gender, Batting Style, Bowling Style, Notes, Starred, Vehicle Reg, Saved At
+  const map = {};
+  rows.slice(1).forEach(r => {
+    const id = String(r[0]||'').trim();
+    if (!id) return;
+    const savedAt = String(r[10]||'');
+    // Keep only the latest entry per ID
+    if (!map[id] || savedAt > map[id].savedAt) {
+      map[id] = {
+        id, firstName: String(r[1]||''), lastName: String(r[2]||''),
+        role: String(r[3]||'Batsman'), gender: String(r[4]||'Male'),
+        batting: String(r[5]||''), bowling: String(r[6]||''),
+        notes: String(r[7]||''), starred: r[8]==='Yes'||r[8]===true,
+        vrn: String(r[9]||''), savedAt
+      };
+    }
+  });
+  return Object.values(map).filter(p => p.firstName);
 }
 
 function rowsToMatches(rows) {
