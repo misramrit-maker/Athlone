@@ -109,30 +109,29 @@
 
   /* -- NAV ---------------------------------------------- */
   nav {
-    display: flex; gap: 1px; flex-wrap: nowrap; overflow-x: auto;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 4px 4px;
+    display: flex; gap: 6px; flex-wrap: wrap;
+    background: var(--bg);
+    border: none;
+    border-radius: 16px;
+    padding: 10px;
     margin-bottom: 22px;
-    scrollbar-width: none;
   }
-  nav::-webkit-scrollbar { display: none; }
   .nav-btn {
-    background: none; border: none;
-    padding: 8px 8px; font-size: 11px; font-weight: 700;
-    color: #a8c5b5; cursor: pointer;
-    border-radius: 8px;
+    background: var(--surface2);
+    border: none;
+    padding: 8px 14px; font-size: 11px; font-weight: 700;
+    color: var(--text2); cursor: pointer;
+    border-radius: 10px;
     transition: color .15s, background .15s;
     white-space: nowrap;
+    flex: 1 1 auto;
+    text-align: center;
     font-family: 'DM Sans', sans-serif;
-    letter-spacing: .04em;
+    letter-spacing: .06em;
     text-transform: uppercase;
   }
-  .nav-btn:hover { color: #fff; background: var(--surface2); }
-  .nav-btn.active { color: #0f1210; background: var(--accent); font-weight: 800; }
-
-  /* -- PAGES -------------------------------------------- */
+  .nav-btn:hover { color: var(--text); background: var(--surface); }
+  .nav-btn.active { color: #0b1710; background: var(--accent); font-weight: 800; }
   .page { display: none; }
   .page.active { display: block; animation: fadeIn .18s ease; }
   @keyframes fadeIn { from{opacity:0;transform:translateY(4px)} to{opacity:1;transform:none} }
@@ -708,20 +707,18 @@
 
   <!-- NAV -->
   <nav>
-    <button class="nav-btn active" onclick="showPage('home', this)">&#x1F3E0; Home</button>
+    <button class="nav-btn active" onclick="showPage('home', this)">Home</button>
     <button class="nav-btn" onclick="showPage('players', this)">Players</button>
     <button class="nav-btn" onclick="showPage('schedule', this)">Schedule</button>
     <button class="nav-btn" onclick="showPage('selection', this)">Selection</button>
     <button class="nav-btn" onclick="showPage('results', this)">Results</button>
-    <button class="nav-btn" onclick="showPage('photos', this)">Photos</button>
-    <button class="nav-btn" onclick="showPage('stats', this)">Stats</button>
-    <button class="nav-btn" onclick="showPage('kit', this)">Kit</button>
     <button class="nav-btn" onclick="showPage('practice', this)">Practice</button>
   </nav>
 
   <!-- HOME -->
   <div id="page-home" class="page active">
     <div id="home-upcoming-matches"></div>
+    <div id="home-results-summary"></div>
     <div id="home-practice-sessions"></div>
   </div>
 
@@ -1241,14 +1238,14 @@ function savePlayer() {
     notes:document.getElementById('p-notes').value.trim(),
     vrn:document.getElementById('p-vrn').value.trim().toUpperCase(),
     gender:document.getElementById('p-gender').value,
-    starred:editPid?(players.find(x=>x.id===editPid)?.starred||false):false,
+    starred:editPid?(players.find(x=>x.id===editPid)?.starred||null):null,
     savedAt: new Date().toISOString()
   };
   if(editPid){const i=players.findIndex(x=>x.id===editPid);players[i]=d;}else players.push(d);
   // sort handled in renderPlayers
   sv(K.p,players);closeModal();renderPlayers();updateHeader();
   syncToSheet('Players',['ID','First Name','Last Name','Role','Gender','Batting Style','Bowling Style','Notes','Starred','Vehicle Reg','Saved At'],
-    [d.id,d.firstName,d.lastName,d.role,d.gender||'Male',d.batting||'',d.bowling||'',d.notes||'',d.starred?'Yes':'No',d.vrn||'',d.savedAt],
+    [d.id,d.firstName,d.lastName,d.role,d.gender||'Male',d.batting||'',d.bowling||'',d.notes||'',d.starred||'Unstarred',d.vrn||'',d.savedAt],
     'ID');
 }
 
@@ -1258,9 +1255,16 @@ function deletePlayer(id) {
   syncDeleteToSheet('Players', 'ID', id);
 }
 
-function toggleStar(id) {
-  const p=players.find(x=>x.id===id);
-  if(p){p.starred=!p.starred;sv(K.p,players);renderPlayers();}
+function saveStarring(id, value) {
+  const p = players.find(x => x.id === id);
+  if (!p) return;
+  p.starred = value.trim();
+  sv(K.p, players);
+  renderPlayers();
+  syncToSheet('Players',
+    ['ID','First Name','Last Name','Role','Gender','Batting Style','Bowling Style','Notes','Starred','Vehicle Reg','Saved At'],
+    [p.id,p.firstName,p.lastName,p.role,p.gender||'Male',p.batting||'',p.bowling||'',p.notes||'',p.starred||'',p.vrn||'',p.savedAt],
+    'ID');
 }
 
 function filterPlayers(f,btn) {
@@ -1272,17 +1276,21 @@ function filterPlayers(f,btn) {
 function renderPlayers() {
   players.sort((a,b) => a.firstName.localeCompare(b.firstName) || a.lastName.localeCompare(b.lastName));
   let list=[...players];
-  if(pFilter==='starred')list=list.filter(p=>p.starred);
+  if(pFilter==='starred')list=list.filter(p=>p.starred&&p.starred.trim());
   else if(pFilter==='Female')list=list.filter(p=>p.gender==='Female');
   else if(pFilter!=='all')list=list.filter(p=>p.role===pFilter||(pFilter==='Wicketkeeper'&&p.role==='Wicketkeeper-Batsman'));
-  list.sort((a,b)=>(b.starred?1:0)-(a.starred?1:0)||a.lastName.localeCompare(b.lastName));
+  list.sort((a,b)=>{
+    const as=a.starred&&a.starred.trim(), bs=b.starred&&b.starred.trim();
+    if(as&&!bs)return -1; if(!as&&bs)return 1;
+    return a.lastName.localeCompare(b.lastName);
+  });
   document.getElementById('squad-count').textContent=players.length+' player'+(players.length!==1?'s':'')+' in the squad';
   const el=document.getElementById('players-list');
   if(!list.length){el.innerHTML='<div class="empty-state">No players found.<br>Add your first player to get started.</div>';return;}
   el.innerHTML=list.map(p=>`
-    <div class="player-card ${p.starred?'is-starred':''}">
+    <div class="player-card ${p.starred&&p.starred.trim()?'is-starred':''}">
       <div class="avatar">${init(p)}</div>
-      <div style="flex:1;min-width:0;padding-right:28px;">
+      <div style="flex:1;min-width:0;">
         <div class="player-name">${full(p)}</div>
         <div class="player-role">
           <span class="badge ${roleClass(p.role)}">${p.role}</span>
@@ -1292,12 +1300,16 @@ function renderPlayers() {
         </div>
         ${p.notes?'<div style="font-size:11px;color:var(--text3);margin-top:5px;">'+p.notes+'</div>':''}
         ${p.vrn?'<div style="font-size:11px;color:var(--text3);margin-top:3px;letter-spacing:.04em;">&#x1F697; '+p.vrn+'</div>':''}
-        <div class="player-actions">
+        <div class="player-actions" style="margin-top:8px;display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
           <button class="btn btn-sm" onclick="openEditPlayer('${p.id}')">Edit</button>
           <button class="btn btn-sm btn-danger" onclick="deletePlayer('${p.id}')">Remove</button>
+          <label style="font-size:11px;color:var(--text3);font-weight:600;text-transform:uppercase;letter-spacing:.05em;margin-left:4px;">&#x2605;</label>
+          <input type="text" value="${p.starred||''}"
+            onblur="saveStarring('${p.id}',this.value)"
+            onkeydown="if(event.key==='Enter')this.blur()"
+            style="width:60px;padding:3px 7px;font-size:12px;font-weight:600;color:var(--gold);border-color:var(--border2);">
         </div>
       </div>
-      <button class="star-btn ${p.starred?'starred':''}" onclick="toggleStar('${p.id}')" title="${p.starred?'Unstar':'Star player'}">${p.starred?'&#x2605;':'&#x2606;'}</button>
     </div>`).join('');
   updateHeader();
 }
@@ -1394,7 +1406,7 @@ function saveResult() {
     savedAt:new Date().toISOString()};
   const i=results.findIndex(x=>x.matchId===mid);
   if(i>=0)results[i]=d;else results.push(d);
-  sv(K.r,results);closeModal();renderResults();updateHeader();
+  sv(K.r,results);closeModal();renderResults();renderHome();updateHeader();
   // For fixed schedule fixtures, match won't exist in matches array — use fixture key parts
   const fixedF = FIXED_SCHEDULE.find(f => (f.date+'_'+f.team+'_'+f.opponent.replace(/\s/g,'')) === mid);
   const opponent = match?.opponent || fixedF?.opponent || '';
@@ -1573,14 +1585,16 @@ function setResultsTeam(team, btn) {
 }
 function renderResults() {
   var today = todayStr();
+  var sevenAhead = new Date(); sevenAhead.setDate(sevenAhead.getDate() + 7);
+  var sevenAheadStr = sevenAhead.toISOString().slice(0,10);
   var allFixtures = [];
 
-  FIXED_SCHEDULE.filter(function(f) { return f.date <= today; }).forEach(function(f) {
+  FIXED_SCHEDULE.filter(function(f) { return f.date <= sevenAheadStr; }).forEach(function(f) {
     var key = f.date + '_' + f.team + '_' + f.opponent.replace(/\s/g,'');
     allFixtures.push({ id: key, date: f.date, opponent: f.opponent, team: f.team, venue: '' });
   });
 
-  matches.filter(function(m) { return m.date <= today; }).forEach(function(m) {
+  matches.filter(function(m) { return m.date <= sevenAheadStr; }).forEach(function(m) {
     allFixtures.push({ id: m.id, date: m.date, opponent: m.opponent, team: m.homeaway||'', venue: m.venue||'' });
   });
 
@@ -1745,7 +1759,7 @@ function rowsToPlayers(rows) {
         batting:   get(r, 'Batting Style', 5, ''),
         bowling:   get(r, 'Bowling Style', 6, ''),
         notes:     get(r, 'Notes',       7, ''),
-        starred:   (get(r, 'Starred',    8, '') === 'Yes') || r[ci('Starred') !== null ? ci('Starred') : 8] === true,
+        starred:   (() => { const v = get(r, 'Starred', 8, '').trim(); return (v === 'Yes' || v === 'true') ? '' : (v === 'No' || v === 'false' || v === 'Unstarred') ? '' : v; })(),
         vrn:       get(r, 'Vehicle Reg', 9, ''),
         savedAt
       };
@@ -1986,12 +2000,17 @@ function renderHome() {
   var tenDays = new Date(); tenDays.setDate(tenDays.getDate() + 10);
   var tenStr = tenDays.toISOString().slice(0,10);
 
-  // ── Upcoming Fixtures (next 10 days) ──────────────────────
+  // ── Upcoming Fixtures (next 10 days, excluding those with a result) ──
   var upcoming = FIXED_SCHEDULE
-    .filter(function(f) { return f.date > today && f.date <= tenStr; })
+    .filter(function(f) {
+      if (f.date < today || f.date > tenStr) return false;
+      var fixId = f.date + '_' + f.team + '_' + f.opponent.replace(/\s/g,'');
+      var hasResult = results.some(function(r) { return r.matchId === fixId; });
+      return !hasResult;
+    })
     .sort(function(a,b) { return a.date.localeCompare(b.date); });
 
-  var matchHTML = '<div class="home-section-title">&#x1F4C5; Upcoming Fixtures</div>';
+  var matchHTML = '<div class="home-section-title" onclick="showPage(\'schedule\',document.querySelector(\'.nav-btn[onclick*=\\\'schedule\\\']\'))" style="cursor:pointer;display:inline-flex;align-items:center;gap:6px;">&#x1F4C5; Upcoming Fixtures</div>';
   if (!upcoming.length) {
     matchHTML += '<div class="home-empty">No fixtures in the next 10 days</div>';
   } else {
@@ -2006,26 +2025,73 @@ function renderHome() {
             ? '<span class="home-venue-badge home-venue-h">H</span>'
             : f.venue==='A'
             ? '<span class="home-venue-badge home-venue-a">A</span>' : '';
-          return '<div class="home-fix-box">'
+          var fixId = f.date + '_' + f.team + '_' + f.opponent.replace(/\s/g,'');
+          var selIds = selections[fixId] || [];
+          var selPlayers = selIds.map(function(id) { return players.find(function(p) { return p.id === id; }); }).filter(Boolean);
+          var selHTML = '';
+          if (selPlayers.length) {
+            selHTML = '<div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border);">'
+              + '<div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--accent);margin-bottom:5px;">&#x2605; Selected XI</div>'
+              + '<div style="display:flex;flex-wrap:wrap;gap:3px;">'
+              + selPlayers.map(function(p) {
+                  return '<span style="font-size:10px;color:var(--text2);background:var(--surface2);border-radius:4px;padding:1px 5px;">' + full(p) + '</span>';
+                }).join('')
+              + '</div></div>';
+          }
+          // Show Result button if within 7 days before or on/after match date
+          var resultBtn = '';
+          return '<div class="home-fix-box" onclick="showPage(\'schedule\',document.querySelector(\'.nav-btn[onclick*=\\\'schedule\\\']\'))" style="cursor:pointer;transition:border-color .15s;border:1px solid ' + (selPlayers.length ? 'var(--accent)' : 'var(--border)') + ';border-radius:10px;">'
             + '<div class="home-fix-box-date">' + weekday + ' ' + day + ' ' + mon + '</div>'
             + '<div class="home-fix-box-opp">vs ' + f.opponent + venueBadge + '</div>'
             + '<div class="home-fix-box-meta">'
             + '<span class="team-pill ' + teamCls + '" style="font-size:10px;padding:1px 6px;">' + f.team + '</span>'
             + (f.time ? '<span style="font-size:11px;color:var(--text3);">' + f.time + '</span>' : '')
             + '</div>'
+            + selHTML
             + '</div>';
         }).join('')
       + '</div>';
   }
   document.getElementById('home-upcoming-matches').innerHTML = matchHTML;
 
-  // ── Upcoming Practice Sessions ─────────────────────────────
+  // ── Recent Results ─────────────────────────────────────────
+  var recentResults = (results||[])
+    .slice().sort(function(a,b) { return (b.savedAt||'').localeCompare(a.savedAt||''); })
+    .slice(0, 4);
+
+  var resultsHTML = '<div class="home-section-title" onclick="showPage(\'results\',document.querySelector(\'.nav-btn[onclick*=\\\'results\\\']\'))" style="margin-top:20px;cursor:pointer;">Recent Results</div>';
+  if (!recentResults.length) {
+    resultsHTML += '<div class="home-empty">No results recorded yet</div>';
+  } else {
+    resultsHTML += '<div style="display:flex;flex-direction:column;gap:8px;margin-top:10px;">'
+      + recentResults.map(function(r) {
+          var match = matches.find(function(m) { return m.id === r.matchId; });
+          var fixed = FIXED_SCHEDULE.find(function(f) { return (f.date+'_'+f.team+'_'+f.opponent.replace(/\s/g,'')) === r.matchId; });
+          var opp = match ? match.opponent : (fixed ? fixed.opponent : 'Unknown');
+          var date = match ? match.date : (fixed ? fixed.date : '');
+          var fmtD = date ? new Date(date+'T12:00:00').toLocaleDateString('en-IE',{day:'numeric',month:'short'}) : '';
+          var resCls = r.result==='win' ? 'result-win' : r.result==='loss' ? 'result-loss' : 'result-draw';
+          var resLabel = r.result ? r.result.charAt(0).toUpperCase()+r.result.slice(1) : '—';
+          return '<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:var(--surface);border-radius:10px;">'
+            + '<div>'
+            + '<div style="font-weight:600;font-size:13px;color:var(--text);">vs ' + opp + '</div>'
+            + '<div style="font-size:11px;color:var(--text3);margin-top:2px;">' + (r.team||'') + (fmtD ? ' &middot; ' + fmtD : '') + '</div>'
+            + '</div>'
+            + '<div style="text-align:right;">'
+            + '<div class="' + resCls + '" style="font-size:13px;">' + resLabel + '</div>'
+            + (r.ourScore || r.theirScore ? '<div style="font-size:11px;color:var(--text3);margin-top:2px;">' + (r.ourScore||'—') + ' / ' + (r.theirScore||'—') + '</div>' : '')
+            + '</div>'
+            + '</div>';
+        }).join('')
+      + '</div>';
+  }
+  document.getElementById('home-results-summary').innerHTML = resultsHTML;
   var upcomingPractice = (practiceSessions||[])
     .filter(function(s) { return s.date > today; })
     .sort(function(a,b) { return a.date.localeCompare(b.date); })
     .slice(0, 3);
 
-  var practiceHTML = '<div class="home-section-title" style="margin-top:20px;">&#x1F3CF; Upcoming Practice</div>';
+  var practiceHTML = '<div class="home-section-title" onclick="showPage(\'practice\',document.querySelector(\'.nav-btn[onclick*=\\\'practice\\\']\'))" style="margin-top:20px;cursor:pointer;display:inline-flex;align-items:center;gap:6px;">&#x1F3CF; Upcoming Practice</div>';
   if (!upcomingPractice.length) {
     practiceHTML += '<div class="home-empty">No practice sessions scheduled</div>';
   } else {
@@ -2034,7 +2100,7 @@ function renderHome() {
       var day = d.getDate();
       var mon = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][d.getMonth()];
       var weekday = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][d.getDay()];
-      return '<div class="home-fixture-card">'
+      return '<div class="home-fixture-card" onclick="showPage(\'practice\',document.querySelector(\'.nav-btn[onclick*=\\\'practice\\\']\'))" style="cursor:pointer;">'
         + '<div class="home-fix-date"><div class="home-fix-day">' + day + '</div><div class="home-fix-mon">' + weekday + ' ' + mon + '</div></div>'
         + '<div class="home-fix-body">'
         + '<div class="home-fix-opp">Practice Session'
@@ -2045,6 +2111,14 @@ function renderHome() {
     }).join('');
   }
   document.getElementById('home-practice-sessions').innerHTML = practiceHTML;
+
+  var quickHTML = '<div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:20px;">'
+    + '<button onclick="showPage(\'stats\',null)" style="flex:1 1 auto;padding:7px 8px;background:var(--surface);border:none;border-radius:8px;color:var(--text2);font-family:\'DM Sans\',sans-serif;font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;cursor:pointer;transition:all .15s;" onmouseover="this.style.background=\'var(--surface2)\';this.style.color=\'var(--text)\'" onmouseout="this.style.background=\'var(--surface)\';this.style.color=\'var(--text2)\'">Stats</button>'
+    + '<button onclick="showPage(\'kit\',null)" style="flex:1 1 auto;padding:7px 8px;background:var(--surface);border:none;border-radius:8px;color:var(--text2);font-family:\'DM Sans\',sans-serif;font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;cursor:pointer;transition:all .15s;" onmouseover="this.style.background=\'var(--surface2)\';this.style.color=\'var(--text)\'" onmouseout="this.style.background=\'var(--surface)\';this.style.color=\'var(--text2)\'">Club Kits</button>'
+    + '<button onclick="showPage(\'photos\',null)" style="flex:1 1 auto;padding:7px 8px;background:var(--surface);border:none;border-radius:8px;color:var(--text2);font-family:\'DM Sans\',sans-serif;font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;cursor:pointer;transition:all .15s;" onmouseover="this.style.background=\'var(--surface2)\';this.style.color=\'var(--text)\'" onmouseout="this.style.background=\'var(--surface)\';this.style.color=\'var(--text2)\'">Photos</button>'
+    + '<button onclick="window.open(\'https://misramrit-maker.github.io/MyCricketTeam/\',\'_blank\')" style="flex:1 1 auto;padding:7px 8px;background:var(--gold-dim);border:none;border-radius:8px;color:var(--gold);font-family:\'DM Sans\',sans-serif;font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;cursor:pointer;transition:all .15s;" onmouseover="this.style.opacity=\'0.8\'" onmouseout="this.style.opacity=\'1\'">Scoring ↗</button>'
+    + '</div>';
+  document.getElementById('home-practice-sessions').innerHTML += quickHTML;
 }
 
 
