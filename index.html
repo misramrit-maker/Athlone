@@ -1085,10 +1085,11 @@
       <div class="form-row"><label>Opponent score</label><input type="text" id="r-them" placeholder="e.g. 148/9 (20)"></div>
     </div>
 
-    <div class="form-row"><label>Player of the Match</label>
-      <select id="r-potm">
-        <option value="">— None —</option>
+    <div class="form-row">
+      <label>Player of the Match</label>
+      <select id="r-potm" multiple style="height:90px;">
       </select>
+      <div style="font-size:11px;color:var(--text3);margin-top:4px;">Hold Ctrl / Cmd to select multiple players</div>
     </div>
     <div class="form-row">
       <label>Star Performers</label>
@@ -1315,6 +1316,21 @@ function clearPlayerPhoto() {
   document.getElementById('p-photo-clear').style.display = 'none';
 }
 
+function promptPlayerPhoto(id) {
+  const p = players.find(x => x.id === id);
+  if (!p) return;
+  const url = prompt('Paste the Google Drive share link for ' + full(p) + ':\n\n(Right-click photo in Drive → Share → Anyone with link → Copy link)\n\nLeave blank to remove photo.', p.photo || '');
+  if (url === null) return; // cancelled
+  const imgUrl = url.trim() ? driveUrlToImg(url.trim()) : null;
+  if (url.trim() && !imgUrl) { alert('Could not read that link. Make sure it\'s a Google Drive share link.'); return; }
+  p.photo = imgUrl || '';
+  sv(K.p, players);
+  renderPlayers();
+  syncToSheet('Players',['ID','First Name','Last Name','Role','Gender','Batting Style','Bowling Style','Notes','Starred','Vehicle Reg','Saved At','Photo'],
+    [p.id,p.firstName,p.lastName,p.role,p.gender||'Male',p.batting||'',p.bowling||'',p.notes||'',p.starred||'',p.vrn||'',p.savedAt,p.photo||''],
+    'ID');
+}
+
 function savePlayer() {
   const first=document.getElementById('p-first').value.trim();
   const last=document.getElementById('p-last').value.trim();
@@ -1393,6 +1409,7 @@ function renderPlayers() {
         <div class="player-actions" style="margin-top:8px;display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
           <button class="btn btn-sm" onclick="openEditPlayer('${p.id}')">Edit</button>
           <button class="btn btn-sm btn-danger" onclick="deletePlayer('${p.id}')">Remove</button>
+          <button class="btn btn-sm" onclick="promptPlayerPhoto('${p.id}')" title="Set photo from Google Drive">${p.photo ? '📷 Photo ✓' : '📷 Photo'}</button>
           <label style="font-size:11px;color:var(--text3);font-weight:600;text-transform:uppercase;letter-spacing:.05em;margin-left:4px;">&#x2605;</label>
           <input type="text" value="${p.starred||''}"
             onblur="saveStarring('${p.id}',this.value)"
@@ -1485,8 +1502,8 @@ function openResultModal(mid) {
   const playerOpts = '<option value="">— Select player —</option>'
     + sortedPlayers.map(p => `<option value="${p.id}">${full(p)}</option>`).join('');
   const potmSel = document.getElementById('r-potm');
-  potmSel.innerHTML = '<option value="">— None —</option>'
-    + sortedPlayers.map(p => `<option value="${p.id}"${r?.potm === p.id ? ' selected' : ''}>${full(p)}</option>`).join('');
+  const savedPotms = r?.potm ? (Array.isArray(r.potm) ? r.potm : [r.potm]) : [];
+  potmSel.innerHTML = sortedPlayers.map(p => `<option value="${p.id}"${savedPotms.includes(p.id) ? ' selected' : ''}>${full(p)}</option>`).join('');
   document.getElementById('r-star-player').innerHTML = playerOpts;
 
   // Load existing star players
@@ -1562,7 +1579,7 @@ function saveResult() {
     result:resultVal,
     ourScore:document.getElementById('r-us').value.trim(),
     theirScore:document.getElementById('r-them').value.trim(),
-    potm:document.getElementById('r-potm').value,
+    potm:[...document.getElementById('r-potm').selectedOptions].map(o=>o.value).filter(Boolean),
     starPlayers: window._starPlayers || [],
     stars:document.getElementById('r-stars').value.trim(),
     notes:document.getElementById('r-notes').value.trim(),
@@ -1576,8 +1593,8 @@ function saveResult() {
   const date     = match?.date     || fixedF?.date     || '';
 
   syncToSheet('Results',
-    ['ID','Match ID','Date','Opponent','Team','Result','Athlone Score','Opponent Score','Star Performers','Summary','Saved At'],
-    [d.id, d.matchId, date, opponent, d.team||'', d.result, d.ourScore||'', d.theirScore||'', d.stars||'', d.notes||'', d.savedAt],
+    ['ID','Match ID','Date','Opponent','Team','Result','Athlone Score','Opponent Score','Star Performers','Summary','POTM','Saved At'],
+    [d.id, d.matchId, date, opponent, d.team||'', d.result, d.ourScore||'', d.theirScore||'', d.stars||'', d.notes||'', JSON.stringify(d.potm||[]), d.savedAt],
     'Match ID'
   );
 }
@@ -1804,7 +1821,8 @@ function renderResults() {
   tbody.innerHTML = filtered.map(function(f) {
     var r = results.find(function(x) { return x.matchId === f.id; }) ||
              results.find(function(x) { return x.matchId === f.id && x.team === f.team; });
-    var potmP = r && r.potm ? players.find(function(p) { return p.id === r.potm; }) : null;
+    var potmIds = r && r.potm ? (Array.isArray(r.potm) ? r.potm : [r.potm]) : [];
+    var potmP = potmIds.length ? { _names: potmIds.map(function(id){ var p=players.find(function(p){return p.id===id;}); return p?full(p):null; }).filter(Boolean) } : null;
     var teamCls = f.team === 'Team 1' ? 'team-1' : f.team === 'Team 2' ? 'team-2' : f.team === 'Team 3' ? 'team-3' : f.team === 'Women' ? 'badge-purple' : 'sched-tag-fr';
 
     var resultCell = '<span style="color:var(--text3);font-size:12px;">pending</span>';
@@ -1814,7 +1832,7 @@ function renderResults() {
     }
 
     var scoreCell  = r ? ((r.ourScore || '—') + (r.theirScore ? ' / ' + r.theirScore : '')) : '—';
-    var potmCell   = potmP ? '&#x2B50; ' + full(potmP) : '—';
+    var potmCell   = potmP && potmP._names.length ? '&#x2B50; ' + potmP._names.join(', ') : '—';
     var starsHTML  = (r && r.stars) ? '<div style="font-weight:600;color:var(--text2);margin-bottom:2px;">&#x1F3CF; ' + r.stars + '</div>' : '';
     var notesHTML  = (r && r.notes) ? '<div style="color:var(--text3);">' + r.notes + '</div>' : '';
     var btnLabel   = r ? 'Edit' : '+ Result';
@@ -1966,17 +1984,23 @@ function rowsToResults(rows) {
     const i = col(name);
     return i >= 0 ? String(r[i]||'') : String(r[fallback]||'');
   };
-  return rows.slice(1).map(r => ({
-    id:        get(r, 'ID', 0),
-    matchId:   get(r, 'Match ID', 1),
-    team:      get(r, 'Team', 4),
-    result:    get(r, 'Result', 5),
-    ourScore:  get(r, 'Athlone Score', 6),
-    theirScore:get(r, 'Opponent Score', 7),
-    stars:     get(r, 'Star Performers', 8),
-    notes:     get(r, 'Summary', 9),
-    savedAt:   get(r, 'Saved At', 10)
-  })).filter(r => r.id && r.matchId);
+  return rows.slice(1).map(r => {
+    const potmRaw = get(r, 'POTM', 11);
+    let potm = [];
+    if (potmRaw) { try { potm = JSON.parse(potmRaw); } catch(e) { potm = potmRaw ? [potmRaw] : []; } }
+    return {
+      id:        get(r, 'ID', 0),
+      matchId:   get(r, 'Match ID', 1),
+      team:      get(r, 'Team', 4),
+      result:    get(r, 'Result', 5),
+      ourScore:  get(r, 'Athlone Score', 6),
+      theirScore:get(r, 'Opponent Score', 7),
+      stars:     get(r, 'Star Performers', 8),
+      notes:     get(r, 'Summary', 9),
+      potm,
+      savedAt:   get(r, 'Saved At', 10)
+    };
+  }).filter(r => r.id && r.matchId);
 }
 
 function rowsToSelections(rows) {
@@ -2206,34 +2230,53 @@ function renderHome() {
   document.getElementById('home-upcoming-matches').innerHTML = matchHTML;
 
   // ── Recent Results ─────────────────────────────────────────
-  var recentResults = (results||[])
-    .slice().sort(function(a,b) { return (b.savedAt||'').localeCompare(a.savedAt||''); })
-    .slice(0, 4);
+  // ── Recent Results ─────────────────────────────────────────────────────────
+  // Enrich each result with its fixture date and opponent, sort by date descending
+  var enrichedResults = (results||[])
+    .filter(function(r) { return r.result && r.matchId; })
+    .map(function(r) {
+      var match = matches.find(function(m) { return m.id === r.matchId; });
+      var fixed = FIXED_SCHEDULE.find(function(f) { return (f.date+'_'+f.team+'_'+f.opponent.replace(/\s/g,'')) === r.matchId; });
+      var opp = match ? match.opponent : (fixed ? fixed.opponent : null);
+      var date = match ? match.date : (fixed ? fixed.date : '');
+      return { r:r, opp:opp, date:date };
+    })
+    .filter(function(e) { return e.opp; })
+    .sort(function(a,b) { return (b.date||'').localeCompare(a.date||'') || (b.r.savedAt||'').localeCompare(a.r.savedAt||''); })
+    .slice(0, 6);
 
-  var resultsHTML = '<div class="home-section-title" onclick="showPage(\'results\',document.querySelector(\'.nav-btn[onclick*=\\\'results\\\']\'))" style="margin-top:20px;cursor:pointer;">Recent Results</div>';
-  if (!recentResults.length) {
+  var resultsHTML = '<div class="home-section-title" onclick="showPage(\'results\',document.querySelector(\'.nav-btn[onclick*=\\\'results\\\']\')" style="margin-top:20px;cursor:pointer;">Recent Results</div>';
+  if (!enrichedResults.length) {
     resultsHTML += '<div class="home-empty">No results recorded yet</div>';
   } else {
     resultsHTML += '<div style="display:flex;flex-direction:column;gap:8px;margin-top:10px;">'
-      + recentResults.map(function(r) {
-          var match = matches.find(function(m) { return m.id === r.matchId; });
-          var fixed = FIXED_SCHEDULE.find(function(f) { return (f.date+'_'+f.team+'_'+f.opponent.replace(/\s/g,'')) === r.matchId; });
-          var opp = match ? match.opponent : (fixed ? fixed.opponent : 'Unknown');
-          var date = match ? match.date : (fixed ? fixed.date : '');
+      + enrichedResults.map(function(e) {
+          var r = e.r;
+          var opp = e.opp;
+          var date = e.date;
           var fmtD = date ? new Date(date+'T12:00:00').toLocaleDateString('en-IE',{day:'numeric',month:'short'}) : '';
           var resCls = r.result==='win' ? 'result-win' : r.result==='loss' ? 'result-loss' : 'result-draw';
           var resLabel = r.result ? r.result.charAt(0).toUpperCase()+r.result.slice(1) : '—';
-          var potmP = r.potm ? players.find(function(p) { return p.id === r.potm; }) : null;
+          var potmIds = r.potm ? (Array.isArray(r.potm) ? r.potm : [r.potm]) : [];
+          var potmPlayers = potmIds.map(function(id) { return players.find(function(p) { return p.id === id; }); }).filter(Boolean);
           var potmHTML = '';
-          if (potmP) {
-            potmHTML = '<div style="display:flex;align-items:center;gap:8px;margin-top:7px;">'
-              + (potmP.photo
-                  ? '<img src="' + potmP.photo + '" style="width:36px;height:36px;border-radius:50%;object-fit:cover;border:2px solid var(--gold);flex-shrink:0;">'
-                  : '<div style="width:36px;height:36px;border-radius:50%;background:var(--gold-dim);border:2px solid var(--gold);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;color:var(--gold);flex-shrink:0;">' + (full(potmP)[0]||'?') + '</div>')
-              + '<div>'
-              + '<div style="font-size:10px;font-weight:700;color:var(--gold);text-transform:uppercase;letter-spacing:.06em;">&#x2B50; Player of the Match</div>'
-              + '<div style="font-size:13px;font-weight:600;color:var(--text);margin-top:1px;">' + full(potmP) + '</div>'
-              + '</div></div>';
+          if (potmPlayers.length) {
+            var playerChips = potmPlayers.map(function(potmP) {
+              var imgUrl = potmP.photo || '';
+              var thumbHTML = imgUrl
+                ? '<img src="' + imgUrl + '" style="width:44px;height:44px;border-radius:50%;object-fit:cover;border:2px solid var(--gold);flex-shrink:0;" onerror="this.style.display=&quot;none&quot;;this.nextSibling.style.display=&quot;flex&quot;;"><div style="display:none;width:44px;height:44px;border-radius:50%;background:rgba(212,168,58,.2);border:2px solid var(--gold);align-items:center;justify-content:center;font-weight:700;font-size:16px;color:var(--gold);flex-shrink:0;">' + (full(potmP)[0]||'?') + '</div>'
+                : '<div style="width:44px;height:44px;border-radius:50%;background:rgba(212,168,58,.2);border:2px solid var(--gold);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:16px;color:var(--gold);flex-shrink:0;">' + (full(potmP)[0]||'?') + '</div>';
+              return '<div style="display:flex;align-items:center;gap:8px;">'
+                + thumbHTML
+                + '<div>'
+                + '<div style="font-size:13px;font-weight:700;color:var(--text);">' + full(potmP) + '</div>'
+                + (potmP.role ? '<div style="font-size:11px;color:var(--text3);">' + potmP.role + '</div>' : '')
+                + '</div></div>';
+            }).join('<div style="width:1px;background:rgba(212,168,58,.3);align-self:stretch;margin:0 4px;"></div>');
+            potmHTML = '<div style="margin-top:8px;padding:8px 10px;background:var(--gold-dim);border:1px solid var(--gold);border-radius:10px;">'
+              + '<div style="font-size:10px;font-weight:700;color:var(--gold);text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px;">&#x2B50; Player' + (potmPlayers.length > 1 ? 's' : '') + ' of the Match</div>'
+              + '<div style="display:flex;gap:12px;flex-wrap:wrap;">' + playerChips + '</div>'
+              + '</div>';
           }
           var starsHTML = '';
           if (r.starPlayers && r.starPlayers.length) {
@@ -2333,7 +2376,32 @@ function processSheetData(json) {
     let updated = false;
     if (d['Players']    && d['Players'].length    > 1) { players    = rowsToPlayers(d['Players']); players.sort((a,b)=>a.firstName.localeCompare(b.firstName)||a.lastName.localeCompare(b.lastName)); sv(K.p, players);       updated = true; }
     if (d['Fixtures']   && d['Fixtures'].length   > 1) { matches    = rowsToMatches(d['Fixtures']);   sv(K.m, matches);       updated = true; }
-    if (d['Results']    && d['Results'].length    > 1) { results    = rowsToResults(d['Results']);    sv(K.r, results);       updated = true; }
+    if (d['Results'] && d['Results'].length > 1) {
+      const sheetResults = rowsToResults(d['Results']);
+      // Merge: for each local result, keep it if Sheets doesn't have it yet (no-cors write may not have landed)
+      // For results in both, prefer whichever has the newer savedAt
+      const merged = [...sheetResults];
+      results.forEach(function(local) {
+        const sheetIdx = merged.findIndex(function(s) { return s.matchId === local.matchId; });
+        if (sheetIdx === -1) {
+          // Not in Sheets yet — keep local version
+          merged.push(local);
+        } else {
+          // Keep whichever is newer, but always preserve starPlayers and potm from local if Sheets lacks them
+          const sheet = merged[sheetIdx];
+          const localNewer = (local.savedAt||'') >= (sheet.savedAt||'');
+          merged[sheetIdx] = {
+            ...sheet,
+            potm: (local.potm && local.potm.length) ? local.potm : (sheet.potm||[]),
+            starPlayers: local.starPlayers || sheet.starPlayers || [],
+            ...(localNewer ? { ourScore: local.ourScore, theirScore: local.theirScore, result: local.result, team: local.team, stars: local.stars, notes: local.notes, savedAt: local.savedAt } : {})
+          };
+        }
+      });
+      results = merged;
+      sv(K.r, results);
+      updated = true;
+    }
     if (d['Kit']          && d['Kit'].length          > 1) { kitData          = rowsToKit(d['Kit']);                sv('acc_kit', kitData);           updated = true; }
     if (d['Practice']     && d['Practice'].length     > 1) { practiceSessions = rowsToPractice(d['Practice']);       sv('acc_practice', practiceSessions); updated = true; }
     if (d['Availability'] && d['Availability'].length > 1) { availability     = rowsToAvailability(d['Availability']); sv('acc_availability', availability); updated = true; }
@@ -2678,7 +2746,7 @@ function renderFixedSchedule() {
       const d = new Date(f.date + 'T12:00:00');
       const day = d.getDate();
       const mon = MONTH_NAMES[d.getMonth()];
-      const isPast = f.date <= today;
+      const isPast = f.date < today;
       const isToday = false;
       const metaParts = [];
       if (f.time) metaParts.push(f.time);
