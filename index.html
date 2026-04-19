@@ -1013,6 +1013,19 @@
     </div>
     <div class="form-row"><label>Notes (captain, vice-captain, etc.)</label><textarea id="p-notes" rows="2"></textarea></div>
     <div class="form-row"><label>Vehicle Registration</label><input type="text" id="p-vrn" placeholder="e.g. 211-G-1234" style="text-transform:uppercase;"></div>
+    <div class="form-row">
+      <label>Player Photo</label>
+      <div style="display:flex;align-items:center;gap:14px;margin-top:4px;">
+        <div id="p-photo-preview" style="width:56px;height:56px;border-radius:50%;background:var(--accent-dim);border:2px solid var(--border2);overflow:hidden;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:20px;color:var(--accent);">📷</div>
+        <div style="flex:1;">
+          <input type="text" id="p-photo-url" placeholder="Paste Google Drive share link…" oninput="previewDrivePhoto(this.value)" style="font-size:12px;">
+          <div style="font-size:11px;color:var(--text3);margin-top:5px;line-height:1.6;">
+            In Google Drive: right-click photo → <strong style="color:var(--text2);">Share</strong> → set to <strong style="color:var(--text2);">Anyone with the link</strong> → Copy link.
+          </div>
+          <button type="button" id="p-photo-clear" class="btn btn-sm btn-danger" style="margin-top:6px;display:none;" onclick="clearPlayerPhoto()">Remove photo</button>
+        </div>
+      </div>
+    </div>
     <div class="modal-footer">
       <button class="btn" onclick="closeModal()">Cancel</button>
       <button class="btn btn-primary" onclick="savePlayer()">Save Player</button>
@@ -1224,6 +1237,11 @@ function openAddPlayer() {
   document.getElementById('p-role').value='Batsman';
   document.getElementById('p-bat').value='';
   document.getElementById('p-bowl').value='';
+  window._playerPhotoData = null;
+  document.getElementById('p-photo-preview').innerHTML = '📷';
+  document.getElementById('p-photo-preview').style.backgroundImage = '';
+  document.getElementById('p-photo-url').value = '';
+  document.getElementById('p-photo-clear').style.display = 'none';
   showModal('modal-player');
 }
 
@@ -1239,7 +1257,62 @@ function openEditPlayer(id) {
   document.getElementById('p-notes').value=p.notes||'';
   document.getElementById('p-vrn').value=p.vrn||'';
   document.getElementById('p-gender').value=p.gender||'Male';
+  // Load existing photo
+  window._playerPhotoData = p.photo || null;
+  document.getElementById('p-photo-url').value = p.photo || '';
+  const prev = document.getElementById('p-photo-preview');
+  if (p.photo) {
+    prev.innerHTML = '';
+    prev.style.backgroundImage = 'url(' + p.photo + ')';
+    prev.style.backgroundSize = 'cover';
+    prev.style.backgroundPosition = 'center';
+    document.getElementById('p-photo-clear').style.display = '';
+  } else {
+    prev.innerHTML = '📷';
+    prev.style.backgroundImage = '';
+    document.getElementById('p-photo-clear').style.display = 'none';
+  }
   showModal('modal-player');
+}
+
+function driveUrlToImg(url) {
+  // Accepts share URL or direct URL, returns a direct thumbnail URL
+  if (!url || !url.trim()) return null;
+  url = url.trim();
+  // Already a direct thumbnail
+  if (url.includes('drive.google.com/thumbnail') || url.includes('drive.google.com/uc')) return url;
+  // Extract file ID from share URL: /file/d/FILE_ID/view or ?id=FILE_ID or /open?id=FILE_ID
+  var m = url.match(/\/file\/d\/([a-zA-Z0-9_-]+)/) || url.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+  if (m) return 'https://drive.google.com/thumbnail?id=' + m[1] + '&sz=w200-h200';
+  return null;
+}
+
+function previewDrivePhoto(val) {
+  const imgUrl = driveUrlToImg(val);
+  const prev = document.getElementById('p-photo-preview');
+  const clearBtn = document.getElementById('p-photo-clear');
+  if (imgUrl) {
+    prev.innerHTML = '';
+    prev.style.backgroundImage = 'url(' + imgUrl + ')';
+    prev.style.backgroundSize = 'cover';
+    prev.style.backgroundPosition = 'center';
+    clearBtn.style.display = '';
+    window._playerPhotoData = imgUrl;
+  } else {
+    prev.innerHTML = '📷';
+    prev.style.backgroundImage = '';
+    clearBtn.style.display = 'none';
+    window._playerPhotoData = null;
+  }
+}
+
+function clearPlayerPhoto() {
+  window._playerPhotoData = null;
+  const prev = document.getElementById('p-photo-preview');
+  prev.innerHTML = '📷';
+  prev.style.backgroundImage = '';
+  document.getElementById('p-photo-url').value = '';
+  document.getElementById('p-photo-clear').style.display = 'none';
 }
 
 function savePlayer() {
@@ -1255,13 +1328,14 @@ function savePlayer() {
     vrn:document.getElementById('p-vrn').value.trim().toUpperCase(),
     gender:document.getElementById('p-gender').value,
     starred:editPid?(players.find(x=>x.id===editPid)?.starred||null):null,
+    photo: window._playerPhotoData || (editPid ? (players.find(x=>x.id===editPid)?.photo||null) : null),
     savedAt: new Date().toISOString()
   };
   if(editPid){const i=players.findIndex(x=>x.id===editPid);players[i]=d;}else players.push(d);
   // sort handled in renderPlayers
   sv(K.p,players);closeModal();renderPlayers();updateHeader();
-  syncToSheet('Players',['ID','First Name','Last Name','Role','Gender','Batting Style','Bowling Style','Notes','Starred','Vehicle Reg','Saved At'],
-    [d.id,d.firstName,d.lastName,d.role,d.gender||'Male',d.batting||'',d.bowling||'',d.notes||'',d.starred||'Unstarred',d.vrn||'',d.savedAt],
+  syncToSheet('Players',['ID','First Name','Last Name','Role','Gender','Batting Style','Bowling Style','Notes','Starred','Vehicle Reg','Photo','Saved At'],
+    [d.id,d.firstName,d.lastName,d.role,d.gender||'Male',d.batting||'',d.bowling||'',d.notes||'',d.starred||'Unstarred',d.vrn||'',d.photo||'',d.savedAt],
     'ID');
 }
 
@@ -1305,7 +1379,7 @@ function renderPlayers() {
   if(!list.length){el.innerHTML='<div class="empty-state">No players found.<br>Add your first player to get started.</div>';return;}
   el.innerHTML=list.map(p=>`
     <div class="player-card ${p.starred&&p.starred.trim()?'is-starred':''}">
-      <div class="avatar">${init(p)}</div>
+      <div class="avatar" style="${p.photo ? 'background-image:url('+p.photo+');background-size:cover;background-position:center;' : ''}">${p.photo ? '' : init(p)}</div>
       <div style="flex:1;min-width:0;">
         <div class="player-name">${full(p)}</div>
         <div class="player-role">
@@ -1850,6 +1924,7 @@ function rowsToPlayers(rows) {
         notes:     get(r, 'Notes',       7, ''),
         starred:   (() => { const v = get(r, 'Starred', 8, '').trim(); return (v === 'Yes' || v === 'true') ? '' : (v === 'No' || v === 'false' || v === 'Unstarred') ? '' : v; })(),
         vrn:       get(r, 'Vehicle Reg', 9, ''),
+        photo:     get(r, 'Photo', 10, ''),
         savedAt
       };
     }
@@ -2149,7 +2224,17 @@ function renderHome() {
           var resCls = r.result==='win' ? 'result-win' : r.result==='loss' ? 'result-loss' : 'result-draw';
           var resLabel = r.result ? r.result.charAt(0).toUpperCase()+r.result.slice(1) : '—';
           var potmP = r.potm ? players.find(function(p) { return p.id === r.potm; }) : null;
-          var potmHTML = potmP ? '<div style="font-size:11px;color:var(--gold);margin-top:4px;">&#x2B50; ' + full(potmP) + '</div>' : '';
+          var potmHTML = '';
+          if (potmP) {
+            potmHTML = '<div style="display:flex;align-items:center;gap:8px;margin-top:7px;">'
+              + (potmP.photo
+                  ? '<img src="' + potmP.photo + '" style="width:36px;height:36px;border-radius:50%;object-fit:cover;border:2px solid var(--gold);flex-shrink:0;">'
+                  : '<div style="width:36px;height:36px;border-radius:50%;background:var(--gold-dim);border:2px solid var(--gold);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;color:var(--gold);flex-shrink:0;">' + (full(potmP)[0]||'?') + '</div>')
+              + '<div>'
+              + '<div style="font-size:10px;font-weight:700;color:var(--gold);text-transform:uppercase;letter-spacing:.06em;">&#x2B50; Player of the Match</div>'
+              + '<div style="font-size:13px;font-weight:600;color:var(--text);margin-top:1px;">' + full(potmP) + '</div>'
+              + '</div></div>';
+          }
           var starsHTML = '';
           if (r.starPlayers && r.starPlayers.length) {
             starsHTML = '<div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:5px;">'
