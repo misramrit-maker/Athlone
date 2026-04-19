@@ -1057,6 +1057,7 @@
       </div>
       <div class="form-row"><label>Result</label>
         <select id="r-res">
+          <option value="">— Clear Result —</option>
           <option value="win">Won</option>
           <option value="loss">Lost</option>
           <option value="draw">Draw</option>
@@ -1071,8 +1072,22 @@
       <div class="form-row"><label>Opponent score</label><input type="text" id="r-them" placeholder="e.g. 148/9 (20)"></div>
     </div>
 
-    <div class="form-row"><label>Star Performers</label>
-      <input type="text" id="r-stars" placeholder="e.g. Varun Rao 6-24, George Jebaraj 87">
+    <div class="form-row"><label>Player of the Match</label>
+      <select id="r-potm">
+        <option value="">— None —</option>
+      </select>
+    </div>
+    <div class="form-row">
+      <label>Star Performers</label>
+      <div style="display:flex;gap:6px;margin-bottom:8px;">
+        <select id="r-star-player" style="flex:1;">
+          <option value="">— Select player —</option>
+        </select>
+        <input type="text" id="r-star-stat" placeholder="e.g. 87 runs, 3-24" style="flex:1;">
+        <button type="button" class="btn btn-sm btn-primary" onclick="addStarPlayer()" style="white-space:nowrap;flex-shrink:0;">+ Add</button>
+      </div>
+      <div id="r-star-list" style="display:flex;flex-direction:column;gap:5px;"></div>
+      <input type="hidden" id="r-stars">
     </div>
     <div class="form-row"><label>Match Summary</label>
       <textarea id="r-notes" rows="4" placeholder="Brief summary of the team performance..."></textarea>
@@ -1385,23 +1400,96 @@ function openResultModal(mid) {
   const autoTeam = r?.team || (fixedF ? fixedF.team : '') || 'Team 1';
   document.getElementById('r-mid').value = mid;
   document.getElementById('r-team').value = autoTeam;
-  document.getElementById('r-res').value = r?.result || 'win';
+  document.getElementById('r-res').value = r?.result || '';
   document.getElementById('r-us').value = r?.ourScore || '';
   document.getElementById('r-them').value = r?.theirScore || '';
   document.getElementById('r-stars').value = r?.stars || '';
   document.getElementById('r-notes').value = r?.notes || '';
 
+  // Populate POTM and star player dropdowns with squad players
+  const sortedPlayers = [...players].sort((a,b) => a.firstName.localeCompare(b.firstName) || a.lastName.localeCompare(b.lastName));
+  const playerOpts = '<option value="">— Select player —</option>'
+    + sortedPlayers.map(p => `<option value="${p.id}">${full(p)}</option>`).join('');
+  const potmSel = document.getElementById('r-potm');
+  potmSel.innerHTML = '<option value="">— None —</option>'
+    + sortedPlayers.map(p => `<option value="${p.id}"${r?.potm === p.id ? ' selected' : ''}>${full(p)}</option>`).join('');
+  document.getElementById('r-star-player').innerHTML = playerOpts;
+
+  // Load existing star players
+  window._starPlayers = [];
+  if (r?.starPlayers && Array.isArray(r.starPlayers)) {
+    window._starPlayers = r.starPlayers.slice();
+  } else if (r?.stars) {
+    // Legacy: parse old free-text into a single entry
+    window._starPlayers = [{ id: '', name: r.stars, stat: '' }];
+  }
+  renderStarList();
+
   showModal('modal-result');
+}
+
+function renderStarList() {
+  const list = document.getElementById('r-star-list');
+  if (!window._starPlayers || !window._starPlayers.length) {
+    list.innerHTML = '<div style="font-size:12px;color:var(--text3);">No star performers added yet.</div>';
+    return;
+  }
+  list.innerHTML = window._starPlayers.map((sp, i) => {
+    const name = sp.id ? (players.find(p => p.id === sp.id) ? full(players.find(p => p.id === sp.id)) : sp.name) : sp.name;
+    return '<div style="display:flex;align-items:center;gap:8px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:6px 10px;">'
+      + '<span style="font-size:13px;">&#x1F3CF;</span>'
+      + '<span style="flex:1;font-size:13px;font-weight:600;color:var(--text);">' + name + '</span>'
+      + (sp.stat ? '<span style="font-size:12px;color:var(--accent);">' + sp.stat + '</span>' : '')
+      + '<button type="button" onclick="removeStarPlayer(' + i + ')" style="background:none;border:none;cursor:pointer;color:var(--text3);font-size:16px;line-height:1;padding:0 2px;" title="Remove">&times;</button>'
+      + '</div>';
+  }).join('');
+}
+
+function addStarPlayer() {
+  const playerId = document.getElementById('r-star-player').value;
+  const stat = document.getElementById('r-star-stat').value.trim();
+  if (!playerId) { alert('Please select a player.'); return; }
+  const p = players.find(x => x.id === playerId);
+  if (!p) return;
+  if (!window._starPlayers) window._starPlayers = [];
+  if (window._starPlayers.find(sp => sp.id === playerId)) { alert(full(p) + ' is already listed.'); return; }
+  window._starPlayers.push({ id: playerId, name: full(p), stat });
+  document.getElementById('r-star-player').value = '';
+  document.getElementById('r-star-stat').value = '';
+  renderStarList();
+}
+
+function removeStarPlayer(i) {
+  window._starPlayers.splice(i, 1);
+  renderStarList();
 }
 
 function saveResult() {
   const mid=document.getElementById('r-mid').value;
+  const resultVal=document.getElementById('r-res').value;
+
+  // If "— Clear Result —" selected, remove any existing result for this fixture
+  if (!resultVal) {
+    const i=results.findIndex(x=>x.matchId===mid);
+    if(i>=0){
+      const removedId=results[i].id;
+      results.splice(i,1);
+      sv(K.r,results);closeModal();renderResults();renderHome();updateHeader();
+      syncDeleteToSheet('Results','ID',removedId);
+    } else {
+      closeModal();
+    }
+    return;
+  }
+
   const match=matches.find(m=>m.id===mid);
   const d={id:uid(),matchId:mid,
     team:document.getElementById('r-team').value,
-    result:document.getElementById('r-res').value,
+    result:resultVal,
     ourScore:document.getElementById('r-us').value.trim(),
     theirScore:document.getElementById('r-them').value.trim(),
+    potm:document.getElementById('r-potm').value,
+    starPlayers: window._starPlayers || [],
     stars:document.getElementById('r-stars').value.trim(),
     notes:document.getElementById('r-notes').value.trim(),
     savedAt:new Date().toISOString()};
@@ -2060,15 +2148,32 @@ function renderHome() {
           var fmtD = date ? new Date(date+'T12:00:00').toLocaleDateString('en-IE',{day:'numeric',month:'short'}) : '';
           var resCls = r.result==='win' ? 'result-win' : r.result==='loss' ? 'result-loss' : 'result-draw';
           var resLabel = r.result ? r.result.charAt(0).toUpperCase()+r.result.slice(1) : '—';
-          return '<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:var(--surface);border-radius:10px;">'
+          var potmP = r.potm ? players.find(function(p) { return p.id === r.potm; }) : null;
+          var potmHTML = potmP ? '<div style="font-size:11px;color:var(--gold);margin-top:4px;">&#x2B50; ' + full(potmP) + '</div>' : '';
+          var starsHTML = '';
+          if (r.starPlayers && r.starPlayers.length) {
+            starsHTML = '<div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:5px;">'
+              + r.starPlayers.map(function(sp) {
+                  var pName = sp.id ? (players.find(function(p){return p.id===sp.id;}) ? full(players.find(function(p){return p.id===sp.id;})) : sp.name) : sp.name;
+                  return '<span style="font-size:11px;background:rgba(46,204,138,.10);color:var(--accent);border-radius:99px;padding:2px 8px;font-weight:600;">&#x1F3CF; ' + pName + (sp.stat ? ' · ' + sp.stat : '') + '</span>';
+                }).join('')
+              + '</div>';
+          } else if (r.stars) {
+            starsHTML = '<div style="font-size:11px;color:var(--text2);margin-top:4px;">&#x1F3CF; ' + r.stars + '</div>';
+          }
+          return '<div style="padding:10px 14px;background:var(--surface);border-radius:10px;">'
+            + '<div style="display:flex;justify-content:space-between;align-items:flex-start;">'
             + '<div>'
             + '<div style="font-weight:600;font-size:13px;color:var(--text);">vs ' + opp + '</div>'
             + '<div style="font-size:11px;color:var(--text3);margin-top:2px;">' + (r.team||'') + (fmtD ? ' &middot; ' + fmtD : '') + '</div>'
             + '</div>'
-            + '<div style="text-align:right;">'
+            + '<div style="text-align:right;flex-shrink:0;margin-left:10px;">'
             + '<div class="' + resCls + '" style="font-size:13px;">' + resLabel + '</div>'
             + (r.ourScore || r.theirScore ? '<div style="font-size:11px;color:var(--text3);margin-top:2px;">' + (r.ourScore||'—') + ' / ' + (r.theirScore||'—') + '</div>' : '')
             + '</div>'
+            + '</div>'
+            + potmHTML
+            + starsHTML
             + '</div>';
         }).join('')
       + '</div>';
