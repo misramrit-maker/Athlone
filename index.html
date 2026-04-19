@@ -1334,8 +1334,8 @@ function savePlayer() {
   if(editPid){const i=players.findIndex(x=>x.id===editPid);players[i]=d;}else players.push(d);
   // sort handled in renderPlayers
   sv(K.p,players);closeModal();renderPlayers();updateHeader();
-  syncToSheet('Players',['ID','First Name','Last Name','Role','Gender','Batting Style','Bowling Style','Notes','Starred','Vehicle Reg','Photo','Saved At'],
-    [d.id,d.firstName,d.lastName,d.role,d.gender||'Male',d.batting||'',d.bowling||'',d.notes||'',d.starred||'Unstarred',d.vrn||'',d.photo||'',d.savedAt],
+  syncToSheet('Players',['ID','First Name','Last Name','Role','Gender','Batting Style','Bowling Style','Notes','Starred','Vehicle Reg','Saved At','Photo'],
+    [d.id,d.firstName,d.lastName,d.role,d.gender||'Male',d.batting||'',d.bowling||'',d.notes||'',d.starred||'Unstarred',d.vrn||'',d.savedAt,d.photo||''],
     'ID');
 }
 
@@ -1352,8 +1352,8 @@ function saveStarring(id, value) {
   sv(K.p, players);
   renderPlayers();
   syncToSheet('Players',
-    ['ID','First Name','Last Name','Role','Gender','Batting Style','Bowling Style','Notes','Starred','Vehicle Reg','Saved At'],
-    [p.id,p.firstName,p.lastName,p.role,p.gender||'Male',p.batting||'',p.bowling||'',p.notes||'',p.starred||'',p.vrn||'',p.savedAt],
+    ['ID','First Name','Last Name','Role','Gender','Batting Style','Bowling Style','Notes','Starred','Vehicle Reg','Saved At','Photo'],
+    [p.id,p.firstName,p.lastName,p.role,p.gender||'Male',p.batting||'',p.bowling||'',p.notes||'',p.starred||'',p.vrn||'',p.savedAt,p.photo||''],
     'ID');
 }
 
@@ -1924,7 +1924,7 @@ function rowsToPlayers(rows) {
         notes:     get(r, 'Notes',       7, ''),
         starred:   (() => { const v = get(r, 'Starred', 8, '').trim(); return (v === 'Yes' || v === 'true') ? '' : (v === 'No' || v === 'false' || v === 'Unstarred') ? '' : v; })(),
         vrn:       get(r, 'Vehicle Reg', 9, ''),
-        photo:     get(r, 'Photo', 10, ''),
+        photo:     get(r, 'Photo', 11, ''),
         savedAt
       };
     }
