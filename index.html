@@ -681,6 +681,19 @@
   .home-venue-h { background: rgba(245,158,11,.15); color: #b45309; }
   .home-venue-a { background: rgba(59,130,246,.12); color: #2563eb; }
 
+  /* Weather widget on home fixture cards */
+  .fix-weather {
+    margin-top: 8px; padding-top: 7px;
+    border-top: 1px solid var(--border);
+    display: flex; align-items: center; gap: 6px;
+    font-size: 12px; color: var(--text2);
+  }
+  .fix-weather-icon { font-size: 18px; line-height: 1; flex-shrink: 0; }
+  .fix-weather-temp { font-weight: 700; color: var(--text); }
+  .fix-weather-detail { font-size: 10px; color: var(--text3); line-height: 1.5; }
+  .fix-weather-loading { font-size: 10px; color: var(--text3); margin-top: 6px; padding-top: 6px; border-top: 1px solid var(--border); }
+  .fix-weather-rain { color: #60a5fa; font-weight: 600; }
+
 </style>
 </head>
 <body>
@@ -1038,17 +1051,28 @@
     <div class="form-row"><label>Opponent</label><input type="text" id="m-opp" placeholder="e.g. Mullingar CC"></div>
     <div class="form-2col">
       <div class="form-row"><label>Date</label><input type="date" id="m-date"></div>
-      <div class="form-row"><label>Format</label>
-        <select id="m-format"><option>20 overs</option><option>35 overs</option><option>40 overs</option><option>50 overs</option><option>T10</option><option>2-day</option></select>
+      <div class="form-row"><label>Time</label><input type="text" id="m-time" placeholder="e.g. 12pm"></div>
+    </div>
+    <div class="form-2col">
+      <div class="form-row"><label>Team</label>
+        <select id="m-team">
+          <option value="Team 1">Team 1</option>
+          <option value="Team 2">Team 2</option>
+          <option value="Team 3">Team 3</option>
+          <option value="Women">Women</option>
+          <option value="Friendly">Friendly</option>
+        </select>
+      </div>
+      <div class="form-row"><label>Home / Away</label>
+        <select id="m-ha"><option value="H">Home</option><option value="A">Away</option><option value="">Neutral</option></select>
       </div>
     </div>
     <div class="form-2col">
-      <div class="form-row"><label>Venue</label><input type="text" id="m-venue" placeholder="e.g. Coosan"></div>
-      <div class="form-row"><label>Home / Away</label>
-        <select id="m-ha"><option>Home</option><option>Away</option><option>Neutral</option></select>
+      <div class="form-row"><label>Format</label>
+        <select id="m-format"><option>20 overs</option><option>35 overs</option><option>40 overs</option><option>50 overs</option><option>T10</option><option>2-day</option></select>
       </div>
+      <div class="form-row"><label>Competition / Notes</label><input type="text" id="m-comp" placeholder="e.g. YMCA Cup, T20…"></div>
     </div>
-    <div class="form-row"><label>Competition</label><input type="text" id="m-comp" placeholder="e.g. Leinster League, Cup&#x2026;"></div>
     <div class="modal-footer">
       <button class="btn" onclick="closeModal()">Cancel</button>
       <button class="btn btn-primary" onclick="saveMatch()">Save Fixture</button>
@@ -1423,10 +1447,11 @@ function renderPlayers() {
 
 // -- SCHEDULE ---------------------------------------------
 function openAddMatch() {
-  ['m-opp','m-venue','m-comp'].forEach(id=>document.getElementById(id).value='');
+  ['m-opp','m-comp','m-time'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('m-date').value='';
   document.getElementById('m-format').value='20 overs';
-  document.getElementById('m-ha').value='Home';
+  document.getElementById('m-ha').value='H';
+  document.getElementById('m-team').value='Team 1';
   showModal('modal-match');
 }
 
@@ -1435,10 +1460,15 @@ function saveMatch() {
   const date=document.getElementById('m-date').value;
   if(!opp||!date){alert('Please enter opponent and date.');return;}
   const d={id:uid(),opponent:opp,date,format:document.getElementById('m-format').value,
-    venue:document.getElementById('m-venue').value.trim(),homeaway:document.getElementById('m-ha').value,
-    competition:document.getElementById('m-comp').value.trim(),savedAt:new Date().toISOString()};
+    venue:document.getElementById('m-ha').value,
+    homeaway:document.getElementById('m-ha').value,
+    team:document.getElementById('m-team').value,
+    time:document.getElementById('m-time').value.trim(),
+    notes:document.getElementById('m-comp').value.trim(),
+    competition:document.getElementById('m-comp').value.trim(),
+    savedAt:new Date().toISOString()};
   matches.push(d);matches.sort((a,b)=>a.date.localeCompare(b.date));
-  sv(K.m,matches);closeModal();renderSchedule();updateHeader();
+  sv(K.m,matches);closeModal();renderFixedSchedule();renderSchedule();renderHome();updateHeader();
   syncToSheet('Fixtures',['ID','Opponent','Date','Format','Venue','Home/Away','Competition','Saved At'],
     [d.id,d.opponent,d.date,d.format,d.venue||'',d.homeaway,d.competition||'',d.savedAt]);
 }
@@ -1446,7 +1476,8 @@ function saveMatch() {
 function deleteMatch(id) {
   if(!confirm('Remove this fixture?'))return;
   matches=matches.filter(x=>x.id!==id);results=results.filter(x=>x.matchId!==id);delete selections[id];
-  sv(K.m,matches);sv(K.r,results);sv(K.s,selections);renderSchedule();updateHeader();
+  sv(K.m,matches);sv(K.r,results);sv(K.s,selections);renderSchedule();renderFixedSchedule();renderHome();updateHeader();
+  syncDeleteToSheet('Fixtures', 'ID', id);
 }
 
 function renderSchedule() {
@@ -2183,12 +2214,172 @@ async function syncDeleteToSheet(tab, keyCol, keyVal) {
 }
 
 
+// ── WEATHER ──────────────────────────────────────────────────
+// Athlone, Ireland coords
+const ATHLONE_LAT = 53.4228;
+const ATHLONE_LON = -7.9401;
+
+// WMO weather code → emoji + short label
+function wxInfo(code) {
+  if (code === 0) return { icon: '☀️', label: 'Clear' };
+  if (code <= 2) return { icon: '⛅', label: 'Partly cloudy' };
+  if (code === 3) return { icon: '☁️', label: 'Overcast' };
+  if (code <= 49) return { icon: '🌫️', label: 'Fog' };
+  if (code <= 55) return { icon: '🌦️', label: 'Drizzle' };
+  if (code <= 65) return { icon: '🌧️', label: 'Rain' };
+  if (code <= 77) return { icon: '❄️', label: 'Snow' };
+  if (code <= 82) return { icon: '🌧️', label: 'Showers' };
+  if (code <= 99) return { icon: '⛈️', label: 'Thunderstorm' };
+  return { icon: '🌡️', label: 'Unknown' };
+}
+
+// Parse match time string like "12pm", "10:30am", "3pm" → hour (0-23)
+function parseMatchHour(timeStr) {
+  if (!timeStr) return 13; // default 1pm
+  timeStr = timeStr.toLowerCase().replace(/\s/g, '');
+  var m = timeStr.match(/^(\d+)(?::(\d+))?\s*(am|pm)?$/);
+  if (!m) return 13;
+  var hr = parseInt(m[1]);
+  var isPm = m[3] === 'pm';
+  var isAm = m[3] === 'am';
+  if (isPm && hr !== 12) hr += 12;
+  if (isAm && hr === 12) hr = 0;
+  return Math.min(hr, 23);
+}
+
+// Fetch hourly weather for all upcoming fixtures in one API call
+async function fetchWeatherForFixtures(fixtures) {
+  // Only fetch for dates within 16 days (Open-Meteo forecast limit)
+  var today = new Date(); today.setHours(0,0,0,0);
+  var limit = new Date(today); limit.setDate(limit.getDate() + 16);
+  var inRange = fixtures.filter(function(f) {
+    var d = new Date(f.date + 'T12:00:00'); return d <= limit;
+  });
+  if (!inRange.length) {
+    fixtures.forEach(function(f) {
+      var wid = 'wx-' + f.date.replace(/-/g,'') + '-' + f.opponent.replace(/\W/g,'').slice(0,8);
+      var el = document.getElementById(wid);
+      if (el) el.style.display = 'none';
+    });
+    return;
+  }
+
+  // Collect unique dates
+  var dates = [...new Set(inRange.map(function(f){ return f.date; }))];
+  var startDate = dates.reduce(function(a,b){ return a<b?a:b; });
+  var endDate   = dates.reduce(function(a,b){ return a>b?a:b; });
+
+  try {
+    var url = 'https://api.open-meteo.com/v1/forecast'
+      + '?latitude=' + ATHLONE_LAT
+      + '&longitude=' + ATHLONE_LON
+      + '&hourly=temperature_2m,precipitation_probability,weathercode,windspeed_10m'
+      + '&daily=weathercode,temperature_2m_max,temperature_2m_min,precipitation_sum'
+      + '&timezone=Europe%2FDublin'
+      + '&start_date=' + startDate
+      + '&end_date=' + endDate;
+
+    var resp = await fetch(url);
+    if (!resp.ok) throw new Error('Weather API error');
+    var data = await resp.json();
+
+    // Build a lookup: date+hour → weather values
+    var hourly = data.hourly;
+    var wxByHour = {};
+    hourly.time.forEach(function(t, i) {
+      wxByHour[t] = {
+        temp: Math.round(hourly.temperature_2m[i]),
+        precip: hourly.precipitation_probability[i],
+        code: hourly.weathercode[i],
+        wind: Math.round(hourly.windspeed_10m[i])
+      };
+    });
+
+    // Build daily lookup for summary fallback
+    var daily = data.daily;
+    var wxByDay = {};
+    daily.time.forEach(function(t, i) {
+      wxByDay[t] = {
+        code: daily.weathercode[i],
+        maxTemp: Math.round(daily.temperature_2m_max[i]),
+        minTemp: Math.round(daily.temperature_2m_min[i]),
+        rain: daily.precipitation_sum[i]
+      };
+    });
+
+    // Inject into each card
+    fixtures.forEach(function(f) {
+      var wid = 'wx-' + f.date.replace(/-/g,'') + '-' + f.opponent.replace(/\W/g,'').slice(0,8);
+      var el = document.getElementById(wid);
+      if (!el) return;
+
+      // Try hourly data at match time
+      var hour = parseMatchHour(f.time);
+      var hourKey = f.date + 'T' + String(hour).padStart(2,'0') + ':00';
+      var wx = wxByHour[hourKey];
+
+      if (wx) {
+        var info = wxInfo(wx.code);
+        var rainStr = wx.precip > 10
+          ? '<span class="fix-weather-rain">&#x1F327; ' + wx.precip + '%</span>'
+          : '';
+        el.className = 'fix-weather';
+        el.innerHTML = '<span class="fix-weather-icon">' + info.icon + '</span>'
+          + '<div>'
+          + '<span class="fix-weather-temp">' + wx.temp + '°C</span>'
+          + ' <span style="color:var(--text3);font-size:10px;">' + info.label + '</span>'
+          + (rainStr ? ' ' + rainStr : '')
+          + '<div class="fix-weather-detail">💨 ' + wx.wind + ' km/h</div>'
+          + '</div>';
+      } else {
+        // Fallback to daily summary
+        var day = wxByDay[f.date];
+        if (day) {
+          var info = wxInfo(day.code);
+          el.className = 'fix-weather';
+          el.innerHTML = '<span class="fix-weather-icon">' + info.icon + '</span>'
+            + '<div>'
+            + '<span class="fix-weather-temp">' + day.maxTemp + '°C</span>'
+            + '<span style="color:var(--text3);font-size:10px;margin-left:3px;">/ ' + day.minTemp + '°</span>'
+            + ' <span style="color:var(--text3);font-size:10px;">' + info.label + '</span>'
+            + (day.rain > 0.5 ? ' <span class="fix-weather-rain">&#x1F327; ' + day.rain.toFixed(1) + 'mm</span>' : '')
+            + '</div>';
+        } else {
+          el.style.display = 'none'; // out of forecast range
+        }
+      }
+    });
+
+  } catch(err) {
+    console.warn('Weather fetch failed:', err);
+    fixtures.forEach(function(f) {
+      var wid = 'wx-' + f.date.replace(/-/g,'') + '-' + f.opponent.replace(/\W/g,'').slice(0,8);
+      var el = document.getElementById(wid);
+      if (el) el.style.display = 'none';
+    });
+  }
+}
+
 function renderHome() {
   var today = todayStr();
   var tenDays = new Date(); tenDays.setDate(tenDays.getDate() + 10);
   var tenStr = tenDays.toISOString().slice(0,10);
 
   // ── Upcoming Fixtures (next 10 days, excluding those with a result) ──
+  var userUpcoming = matches
+    .filter(function(m) {
+      if (m.date < today || m.date > tenStr) return false;
+      var hasResult = results.some(function(r) { return r.matchId === m.id; });
+      return !hasResult;
+    })
+    .map(function(m) {
+      return {
+        date: m.date, team: m.team || 'Friendly',
+        opponent: m.opponent, time: m.time || '',
+        venue: m.venue || m.homeaway || '', _userId: m.id
+      };
+    });
+
   var upcoming = FIXED_SCHEDULE
     .filter(function(f) {
       if (f.date < today || f.date > tenStr) return false;
@@ -2196,6 +2387,8 @@ function renderHome() {
       var hasResult = results.some(function(r) { return r.matchId === fixId; });
       return !hasResult;
     })
+    .map(function(f) { return Object.assign({}, f, {_userId: null}); })
+    .concat(userUpcoming)
     .sort(function(a,b) { return a.date.localeCompare(b.date); });
 
   var matchHTML = '<div class="home-section-title" onclick="showPage(\'schedule\',document.querySelector(\'.nav-btn[onclick*=\\\'schedule\\\']\'))" style="cursor:pointer;display:inline-flex;align-items:center;gap:6px;">&#x1F4C5; Upcoming Fixtures</div>';
@@ -2214,8 +2407,7 @@ function renderHome() {
             : f.venue==='A'
             ? '<span class="home-venue-badge home-venue-a">A</span>' : '';
           var fixId = f.date + '_' + f.team + '_' + f.opponent.replace(/\s/g,'');
-          // Show Result button if within 7 days before or on/after match date
-          var resultBtn = '';
+          var weatherId = 'wx-' + f.date.replace(/-/g,'') + '-' + f.opponent.replace(/\W/g,'').slice(0,8);
           return '<div class="home-fix-box" onclick="showPage(\'schedule\',document.querySelector(\'.nav-btn[onclick*=\\\'schedule\\\']\'))" style="cursor:pointer;transition:border-color .15s;border:1px solid var(--border);border-radius:10px;">'
             + '<div class="home-fix-box-date">' + weekday + ' ' + day + ' ' + mon + '</div>'
             + '<div class="home-fix-box-opp">vs ' + f.opponent + venueBadge + '</div>'
@@ -2223,13 +2415,15 @@ function renderHome() {
             + '<span class="team-pill ' + teamCls + '" style="font-size:10px;padding:1px 6px;">' + f.team + '</span>'
             + (f.time ? '<span style="font-size:11px;color:var(--text3);">' + f.time + '</span>' : '')
             + '</div>'
+            + '<div id="' + weatherId + '" class="fix-weather-loading">&#x26C5; weather…</div>'
             + '</div>';
         }).join('')
       + '</div>';
   }
   document.getElementById('home-upcoming-matches').innerHTML = matchHTML;
 
-  // ── Recent Results ─────────────────────────────────────────
+  // Fetch weather for each upcoming fixture
+  if (upcoming.length) fetchWeatherForFixtures(upcoming);
   // ── Recent Results ─────────────────────────────────────────────────────────
   // Enrich each result with its fixture date and opponent, sort by date descending
   var enrichedResults = (results||[])
@@ -2721,7 +2915,18 @@ function schedTagClass(team) {
 
 function renderFixedSchedule() {
   const today = todayStr();
-  let fixtures = FIXED_SCHEDULE;
+  // Merge FIXED_SCHEDULE with user-added matches, normalised to same shape
+  const userFixtures = matches.map(m => ({
+    date: m.date,
+    team: m.team || m.homeaway || 'Friendly',
+    opponent: m.opponent,
+    time: m.time || '',
+    notes: m.notes || m.competition || '',
+    venue: m.venue || m.homeaway || '',
+    _userId: m.id  // mark as user-added so we can show delete button
+  }));
+
+  let fixtures = FIXED_SCHEDULE.map(f => ({...f, _userId: null})).concat(userFixtures);
   if (schedTeam !== 'all') fixtures = fixtures.filter(f => f.team === schedTeam);
   if (schedVenue !== 'all') fixtures = fixtures.filter(f => f.venue === schedVenue);
 
@@ -2747,7 +2952,6 @@ function renderFixedSchedule() {
       const day = d.getDate();
       const mon = MONTH_NAMES[d.getMonth()];
       const isPast = f.date < today;
-      const isToday = false;
       const metaParts = [];
       if (f.time) metaParts.push(f.time);
       if (f.notes) metaParts.push(f.notes);
@@ -2756,8 +2960,10 @@ function renderFixedSchedule() {
         : f.venue === 'A'
         ? '<span style="font-size:10px;font-weight:700;padding:1px 6px;border-radius:3px;background:rgba(59,130,246,.12);color:#2563eb;margin-left:6px;">AWAY</span>'
         : '';
-      // Look up result for past fixtures
-      const fKey = f.date + '_' + f.team + '_' + f.opponent.replace(/\s/g, '');
+      // Build fixture key — user-added matches use their ID, fixed schedule use the composite key
+      const fKey = f._userId
+        ? f._userId
+        : f.date + '_' + f.team + '_' + f.opponent.replace(/\s/g, '');
       const fResult = isPast ? results.find(r => r.matchId === fKey) : null;
       const resultLabels = {win:'Won', loss:'Lost', draw:'Draw', 'washed out':'Washed', 'no result':'N/R', 'abandoned':'Aband.'};
       const resultBadge = fResult
@@ -2767,14 +2973,26 @@ function renderFixedSchedule() {
       const tenDaysLimit = new Date(); tenDaysLimit.setDate(tenDaysLimit.getDate() + 10);
       const tenDaysLimitStr = tenDaysLimit.toISOString().slice(0,10);
       const showAvailBtn = !isPast && f.date <= tenDaysLimitStr;
+      const deadlinePast = showAvailBtn && availDeadlinePassed(f.date);
       const availBtn = showAvailBtn
-        ? '<button class="btn btn-sm btn-primary" style="margin-top:8px;width:100%;"'
-          + ' data-key="' + fKey + '" data-opp="' + f.opponent + '" data-date="' + f.date + '" data-team="' + f.team + '" data-time="' + (f.time||'') + '"'
-          + ' onclick="openAvailModal(this.dataset.key,this.dataset.opp,this.dataset.date,this.dataset.team,this.dataset.time)">'
-          + '&#x270F; Mark Availability</button>'
+        ? (deadlinePast
+            ? '<div style="margin-top:8px;font-size:11px;color:var(--text3);padding:6px 0;text-align:center;">&#x1F512; Availability closed</div>'
+            : '<button class="btn btn-sm btn-primary" style="margin-top:8px;width:100%;"'
+              + ' data-key="' + fKey + '" data-opp="' + f.opponent + '" data-date="' + f.date + '" data-team="' + f.team + '" data-time="' + (f.time||'') + '"'
+              + ' onclick="openAvailModal(this.dataset.key,this.dataset.opp,this.dataset.date,this.dataset.team,this.dataset.time)">'
+              + '&#x270F; Mark Availability</button>')
         : '';
 
-      return `<div class="sched-fixture${isPast?' past':''}${isToday?' sched-today':''}">
+      // Delete button only for user-added fixtures
+      const deleteBtn = f._userId
+        ? '<button class="btn btn-sm btn-danger" style="margin-top:6px;" onclick="deleteMatch(\'' + f._userId + '\')">&#x2715; Remove</button>'
+        : '';
+
+      // Result button for all fixtures
+      const resultBtn = '<button class="btn btn-sm" style="margin-top:6px;" onclick="openResultModal(\'' + fKey + '\')">'
+        + (fResult ? 'Edit result' : '+ Result') + '</button>';
+
+      return `<div class="sched-fixture${isPast?' past':''}">
         <div class="sched-date-block">
           <div class="sched-day">${day}</div>
           <div class="sched-mon">${mon}</div>
@@ -2785,6 +3003,11 @@ function renderFixedSchedule() {
           <div class="sched-meta">
             <span class="sched-tag ${schedTagClass(f.team)}">${f.team}</span>
             ${metaParts.join(' &middot; ')}
+            ${f._userId ? '<span style="font-size:10px;color:var(--text3);margin-left:4px;">(added)</span>' : ''}
+          </div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:2px;">
+            ${resultBtn}
+            ${deleteBtn}
           </div>
           ${availBtn}
         </div>
@@ -3029,7 +3252,9 @@ function renderThisWeek() {
   const tenDaysEnd = new Date(today);
   tenDaysEnd.setDate(tenDaysEnd.getDate() + 10);
   const tenDaysStr = tenDaysEnd.toISOString().slice(0,10);
-  const upcoming = FIXED_SCHEDULE.filter(f => f.date > todayStr2 && f.date <= tenDaysStr);
+  const fixedUpcoming = FIXED_SCHEDULE.filter(f => f.date > todayStr2 && f.date <= tenDaysStr).map(f => Object.assign({}, f, {_userId: null}));
+  const userUpcoming = matches.filter(m => m.date > todayStr2 && m.date <= tenDaysStr).map(m => ({date:m.date, team:m.team||'Friendly', opponent:m.opponent, time:m.time||'', notes:m.notes||m.competition||'', venue:m.venue||'', _userId:m.id}));
+  const upcoming = fixedUpcoming.concat(userUpcoming).sort((a,b) => a.date.localeCompare(b.date));
 
   const wrap = document.getElementById('this-week-wrap');
   const list = document.getElementById('this-week-list');
@@ -3041,7 +3266,7 @@ function renderThisWeek() {
   wrap.classList.remove('hidden');
 
   list.innerHTML = upcoming.map(f => {
-    const key = fixtureKey(f);
+    const key = f._userId ? f._userId : fixtureKey(f);
     const avail = availability[key] || {};
     const yes   = Object.entries(avail).filter(([,v]) => v==='yes').map(([n]) => n);
     const no    = Object.entries(avail).filter(([,v]) => v==='no').map(([n]) => n);
@@ -3085,14 +3310,16 @@ function renderThisWeek() {
       + (f.time ? ' &middot; ' + f.time : '')
       + (f.notes ? ' &middot; ' + f.notes : '')
       + '</div></div>'
-      + '<button class="btn btn-sm btn-primary"'
-      + ' data-key="' + key + '"'
-      + ' data-opp="' + f.opponent + '"'
-      + ' data-date="' + f.date + '"'
-      + ' data-team="' + f.team + '"'
-      + ' data-time="' + (f.time||'') + '"'
-      + ' onclick="openAvailModal(this.dataset.key,this.dataset.opp,this.dataset.date,this.dataset.team,this.dataset.time)">'
-      + 'Mark Availability</button>'
+      + (availDeadlinePassed(f.date)
+          ? '<div style="font-size:11px;color:var(--text3);padding:4px 0;">&#x1F512; Availability closed</div>'
+          : '<button class="btn btn-sm btn-primary"'
+            + ' data-key="' + key + '"'
+            + ' data-opp="' + f.opponent + '"'
+            + ' data-date="' + f.date + '"'
+            + ' data-team="' + f.team + '"'
+            + ' data-time="' + (f.time||'') + '"'
+            + ' onclick="openAvailModal(this.dataset.key,this.dataset.opp,this.dataset.date,this.dataset.team,this.dataset.time)">'
+            + 'Mark Availability</button>')
       + '</div>'
       + '<div class="week-avail-row"><div class="week-avail-groups">'
       + '<div class="avail-group">'
@@ -3113,8 +3340,32 @@ function renderThisWeek() {
   }).join('');
 }
 
+// Returns true if the Thursday-6pm availability deadline has passed for a match date
+function availDeadlinePassed(matchDate) {
+  // Find the Thursday before (or on) the match date
+  var match = new Date(matchDate + 'T12:00:00');
+  var dow = match.getDay(); // 0=Sun … 6=Sat
+  // Days back to most recent Thursday (day 4)
+  var daysBack = (dow + 7 - 4) % 7; // 0 if match is Thursday, 1 if Friday, etc.
+  var deadline = new Date(match);
+  deadline.setDate(match.getDate() - daysBack);
+  deadline.setHours(18, 0, 0, 0); // 6pm
+  return new Date() > deadline;
+}
+
 function openAvailModal(key, opponent, date, team, time) {
-  document.getElementById('avail-fixture-key').value = key;
+  // Check deadline: Thursday 6pm before match week
+  if (availDeadlinePassed(date)) {
+    var match = new Date(date + 'T12:00:00');
+    var dow = match.getDay();
+    var daysBack = (dow + 7 - 4) % 7;
+    var deadline = new Date(match);
+    deadline.setDate(match.getDate() - daysBack);
+    deadline.setHours(18, 0, 0, 0);
+    var deadlineFmt = deadline.toLocaleDateString('en-IE', {weekday:'long', day:'numeric', month:'short'}) + ' at 6:00pm';
+    alert('Availability for this match closed on ' + deadlineFmt + '.\n\nContact the team manager if you need to update your availability.');
+    return;
+  }
   document.getElementById('avail-lift').value = '';
   document.getElementById('avail-modal-title').textContent = 'vs ' + opponent;
   const d = new Date(date + 'T12:00:00');
