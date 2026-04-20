@@ -3342,13 +3342,15 @@ function renderThisWeek() {
 
 // Returns true if the Thursday-6pm availability deadline has passed for a match date
 function availDeadlinePassed(matchDate) {
-  // Find the Thursday before (or on) the match date
+  // Deadline = Thursday 6pm of the same Mon-Sun week as the match
   var match = new Date(matchDate + 'T12:00:00');
-  var dow = match.getDay(); // 0=Sun … 6=Sat
-  // Days back to most recent Thursday (day 4)
-  var daysBack = (dow + 7 - 4) % 7; // 0 if match is Thursday, 1 if Friday, etc.
+  var dow = match.getDay(); // 0=Sun,1=Mon...6=Sat
+  // Days from Monday of this week: Mon=0,Tue=1...Sun=6
+  var dayFromMon = (dow + 6) % 7;
+  // Thursday is day 3 from Monday, so offset = 3 - dayFromMon
+  var daysToThursday = 3 - dayFromMon;
   var deadline = new Date(match);
-  deadline.setDate(match.getDate() - daysBack);
+  deadline.setDate(match.getDate() + daysToThursday);
   deadline.setHours(18, 0, 0, 0); // 6pm
   return new Date() > deadline;
 }
@@ -3358,14 +3360,16 @@ function openAvailModal(key, opponent, date, team, time) {
   if (availDeadlinePassed(date)) {
     var match = new Date(date + 'T12:00:00');
     var dow = match.getDay();
-    var daysBack = (dow + 7 - 4) % 7;
+    var dayFromMon = (dow + 6) % 7;
+    var daysToThursday = 3 - dayFromMon;
     var deadline = new Date(match);
-    deadline.setDate(match.getDate() - daysBack);
+    deadline.setDate(match.getDate() + daysToThursday);
     deadline.setHours(18, 0, 0, 0);
     var deadlineFmt = deadline.toLocaleDateString('en-IE', {weekday:'long', day:'numeric', month:'short'}) + ' at 6:00pm';
     alert('Availability for this match closed on ' + deadlineFmt + '.\n\nContact the team manager if you need to update your availability.');
     return;
   }
+  document.getElementById('avail-fixture-key').value = key;
   document.getElementById('avail-lift').value = '';
   document.getElementById('avail-modal-title').textContent = 'vs ' + opponent;
   const d = new Date(date + 'T12:00:00');
