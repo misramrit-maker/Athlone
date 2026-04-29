@@ -300,20 +300,37 @@
   .ts-section { display: none; }
   .ts-section.active { display: block; }
   .ts-player-row {
-    display: grid; grid-template-columns: 36px 1fr 150px 110px 30px;
-    gap: 8px; align-items: center; padding: 7px 0;
+    display: grid;
+    grid-template-columns: 36px 1fr 160px 36px;
+    gap: 8px; align-items: center; padding: 8px 0;
     border-bottom: 1px solid var(--border);
   }
   .ts-player-row:last-child { border-bottom: none; }
-  .ts-player-row input, .ts-player-row select { font-size: 12px; padding: 6px 8px; }
-  .ts-num { font-size: 12px; color: var(--text3); font-weight: 700; text-align: center; }
-  .ts-remove { background: none; border: none; cursor: pointer; color: var(--text3); font-size: 15px; padding: 2px; }
+  .ts-player-row input, .ts-player-row select { font-size: 13px; padding: 8px 10px; }
+  .ts-num { font-size: 13px; color: var(--text3); font-weight: 700; text-align: center; }
+  .ts-remove { background: none; border: none; cursor: pointer; color: var(--text3); font-size: 18px; padding: 6px; line-height:1; touch-action: manipulation; }
   .ts-remove:hover { color: var(--danger); }
   .ts-col-header {
-    display: grid; grid-template-columns: 36px 1fr 150px 110px 30px;
+    display: grid; grid-template-columns: 36px 1fr 160px 36px;
     gap: 8px; padding-bottom: 6px; margin-bottom: 2px;
   }
   .ts-col-header span { font-size: 10px; color: var(--text3); text-transform: uppercase; letter-spacing: .06em; font-weight: 700; }
+
+  /* Mobile: stack role below name, hide code column */
+  @media (max-width: 600px) {
+    .ts-col-header { display: none; }
+    .ts-player-row {
+      grid-template-columns: 32px 1fr 36px;
+      grid-template-rows: auto auto;
+      row-gap: 6px; column-gap: 8px;
+      padding: 10px 0;
+    }
+    .ts-num  { grid-column: 1; grid-row: 1 / 3; font-size: 14px; }
+    .ts-name { grid-column: 2; grid-row: 1; font-size: 15px !important; padding: 10px 12px !important; }
+    .ts-role { grid-column: 2; grid-row: 2; font-size: 13px !important; padding: 8px 10px !important; }
+    .ts-code { display: none !important; }
+    .ts-remove { grid-column: 3; grid-row: 1 / 3; font-size: 22px; padding: 10px 8px; }
+  }
   .ts-preview-header {
     text-align: center; padding: 16px; background: var(--surface2);
     border-radius: var(--radius); margin-bottom: 14px;
@@ -335,10 +352,23 @@
   .ts-status { font-size: 12px; color: var(--accent); min-height: 18px; margin-top: 6px; }
 
   /* Social Graphic player rows */
-  .sg-player-row { display:grid; grid-template-columns:28px 1fr 90px 24px; gap:6px; align-items:center; padding:5px 0; border-bottom:1px solid var(--border); }
+  .sg-player-row { display:grid; grid-template-columns:28px 1fr 90px 28px; gap:6px; align-items:center; padding:6px 0; border-bottom:1px solid var(--border); }
   .sg-player-row:last-child { border-bottom:none; }
-  .sg-player-row input, .sg-player-row select { font-size:12px; padding:5px 8px; }
+  .sg-player-row input, .sg-player-row select { font-size:13px; padding:8px 10px; }
   .sg-num { font-size:12px; color:var(--text3); font-weight:700; text-align:center; }
+
+  @media (max-width: 600px) {
+    .sg-player-row { grid-template-columns: 28px 1fr 28px; grid-template-rows: auto auto; row-gap: 5px; padding: 8px 0; }
+    .sg-num   { grid-column: 1; grid-row: 1 / 3; }
+    .sg-player-row input  { grid-column: 2; grid-row: 1; font-size: 15px !important; padding: 10px 12px !important; }
+    .sg-player-row select { grid-column: 2; grid-row: 2; font-size: 13px !important; padding: 8px 10px !important; }
+    .sg-player-row button { grid-column: 3; grid-row: 1 / 3; font-size: 22px; padding: 10px 6px; }
+    /* General mobile form improvements for selection tab */
+    .ts-tabs { gap: 4px; }
+    .ts-tab { padding: 7px 10px; font-size: 11px; }
+    #ts-sheet .form-2col { grid-template-columns: 1fr; }
+    #ts-social .form-2col { grid-template-columns: 1fr; }
+  }
 
   @media (max-width: 520px) {
     .form-2col { grid-template-columns: 1fr; }
@@ -913,13 +943,13 @@
       <div class="card">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
           <div class="section-label" style="margin-bottom:0;">Team List</div>
-          <div style="display:flex;gap:6px;">
-            <button class="btn btn-sm" onclick="tsFillFromSquad()">Fill from squad</button>
-            <button class="btn btn-sm" onclick="tsAddPlayer()">+ Add player</button>
-          </div>
+        <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;">
+        <button class="btn btn-sm" style="flex:1;min-width:130px;padding:10px;" onclick="tsFillFromSquad()">Fill from squad</button>
+        <button class="btn btn-sm" style="flex:1;min-width:130px;padding:10px;" onclick="tsAddPlayer()">+ Add player</button>
+      </div>
         </div>
         <div class="ts-col-header">
-          <span>#</span><span>Name</span><span>Role</span><span>Code</span><span></span>
+          <span>#</span><span>Name</span><span>Role</span><span></span>
         </div>
         <div id="ts-player-list"></div>
       </div>
@@ -3736,12 +3766,10 @@ function tsRenderPlayers() {
   const el = document.getElementById('ts-player-list');
   if (!el) return;
   el.innerHTML = tsPlayers.map((p, i) => {
-    const num = i === 0 ? 'C' : p.role === 'Wicketkeeper' ? 'WK' : (i + 1);
     return '<div class="ts-player-row" data-idx="' + i + '">'
-      + '<div class="ts-num">' + num + '</div>'
+      + '<div class="ts-num">' + (i + 1) + '</div>'
       + '<input class="ts-name" type="text" value="' + (p.name||'') + '" placeholder="Player name" oninput="tsPlayers[' + i + '].name=this.value">'
-      + '<select class="ts-role" onchange="tsPlayers[' + i + '].role=this.value;tsRenderPlayers()">' + TS_ROLES.map(r => '<option' + (r === p.role ? ' selected' : '') + '>' + r + '</option>').join('') + '</select>'
-      + '<input class="ts-code" type="text" value="' + (p.code||'') + '" placeholder="Code" oninput="tsPlayers[' + i + '].code=this.value">'
+      + '<select class="ts-role" onchange="tsPlayers[' + i + '].role=this.value">' + TS_ROLES.map(r => '<option' + (r === p.role ? ' selected' : '') + '>' + r + '</option>').join('') + '</select>'
       + '<button class="ts-remove" onclick="tsPlayers.splice(' + i + ',1);tsRenderPlayers()">✕</button>'
       + '</div>';
   }).join('');
@@ -3823,7 +3851,7 @@ function tsCollectFromDOM() {
     if (!tsPlayers[i]) return;
     tsPlayers[i].name = row.querySelector('.ts-name').value.trim();
     tsPlayers[i].role = row.querySelector('.ts-role').value;
-    tsPlayers[i].code = row.querySelector('.ts-code').value.trim();
+    
   });
 }
 
@@ -4027,7 +4055,7 @@ function sgFillFromSheet() {
     if (!tsPlayers[i]) return;
     tsPlayers[i].name = row.querySelector('.ts-name').value.trim();
     tsPlayers[i].role = row.querySelector('.ts-role').value;
-    tsPlayers[i].code = row.querySelector('.ts-code').value.trim();
+    
   });
   sgPlayers = tsPlayers.filter(p => p.name).map((p, i) => {
     let badge = '';
