@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Athlone Cricket Club</title>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
   :root {
     --bg:        #0f1210;
@@ -285,6 +286,59 @@
   ::-webkit-scrollbar { width: 6px; height: 6px; }
   ::-webkit-scrollbar-track { background: var(--bg); }
   ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+
+  /* -- TEAM SHEET ---------------------------------------- */
+  .ts-tabs { display: flex; gap: 6px; margin-bottom: 16px; flex-wrap: wrap; }
+  .ts-tab {
+    background: none; border: 1px solid var(--border);
+    border-radius: 8px; padding: 5px 14px; font-size: 12px;
+    cursor: pointer; color: var(--text3); transition: all .15s;
+    font-family: 'DM Sans', sans-serif; font-weight: 500;
+  }
+  .ts-tab:hover { color: var(--text); border-color: var(--border2); }
+  .ts-tab.active { background: var(--accent-dim); color: var(--accent); border-color: rgba(46,204,138,.4); }
+  .ts-section { display: none; }
+  .ts-section.active { display: block; }
+  .ts-player-row {
+    display: grid; grid-template-columns: 36px 1fr 150px 110px 30px;
+    gap: 8px; align-items: center; padding: 7px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .ts-player-row:last-child { border-bottom: none; }
+  .ts-player-row input, .ts-player-row select { font-size: 12px; padding: 6px 8px; }
+  .ts-num { font-size: 12px; color: var(--text3); font-weight: 700; text-align: center; }
+  .ts-remove { background: none; border: none; cursor: pointer; color: var(--text3); font-size: 15px; padding: 2px; }
+  .ts-remove:hover { color: var(--danger); }
+  .ts-col-header {
+    display: grid; grid-template-columns: 36px 1fr 150px 110px 30px;
+    gap: 8px; padding-bottom: 6px; margin-bottom: 2px;
+  }
+  .ts-col-header span { font-size: 10px; color: var(--text3); text-transform: uppercase; letter-spacing: .06em; font-weight: 700; }
+  .ts-preview-header {
+    text-align: center; padding: 16px; background: var(--surface2);
+    border-radius: var(--radius); margin-bottom: 14px;
+    border: 1px solid var(--border);
+  }
+  .ts-preview-title { font-family: 'Playfair Display', serif; font-size: 17px; font-weight: 700; color: var(--text); }
+  .ts-preview-sub { font-size: 13px; color: var(--text2); margin-top: 3px; }
+  .ts-preview-club { font-size: 11px; color: var(--accent); font-weight: 700; letter-spacing: .08em; text-transform: uppercase; margin-bottom: 4px; }
+  .ts-preview-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .ts-preview-table th { font-size: 10px; color: var(--text3); text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--border); text-transform: uppercase; letter-spacing: .05em; font-weight: 700; }
+  .ts-preview-table td { padding: 10px 10px; border-bottom: 1px solid var(--border); color: var(--text2); }
+  .ts-preview-table tr:last-child td { border-bottom: none; }
+  .ts-badge-c { display:inline-block; padding:1px 7px; border-radius:99px; font-size:10px; font-weight:700; background:var(--gold-dim); color:var(--gold); }
+  .ts-badge-wk { display:inline-block; padding:1px 7px; border-radius:99px; font-size:10px; font-weight:700; background:rgba(60,130,220,.14); color:#6ab0f5; }
+  .ts-footer-note { font-size: 11px; color: var(--text3); line-height: 1.6; margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--border); }
+  .ts-sign-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 14px; }
+  .ts-sign-label { font-size: 11px; color: var(--text3); margin-bottom: 4px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; }
+  .ts-sign-line { border-bottom: 1px solid var(--border2); height: 26px; }
+  .ts-status { font-size: 12px; color: var(--accent); min-height: 18px; margin-top: 6px; }
+
+  /* Social Graphic player rows */
+  .sg-player-row { display:grid; grid-template-columns:28px 1fr 90px 24px; gap:6px; align-items:center; padding:5px 0; border-bottom:1px solid var(--border); }
+  .sg-player-row:last-child { border-bottom:none; }
+  .sg-player-row input, .sg-player-row select { font-size:12px; padding:5px 8px; }
+  .sg-num { font-size:12px; color:var(--text3); font-weight:700; text-align:center; }
 
   @media (max-width: 520px) {
     .form-2col { grid-template-columns: 1fr; }
@@ -795,22 +849,193 @@
   <!-- SELECTION -->
   <div id="page-selection" class="page">
     <div class="page-header"><div class="page-title">Match Selection</div></div>
-    <div class="form-row">
-      <label>Choose fixture</label>
-      <select id="sel-fixture" onchange="loadSelection()">
-        <option value="">&#x2014; select a fixture &#x2014;</option>
-      </select>
+
+    <!-- Sub-tabs -->
+    <div class="ts-tabs">
+      <button class="ts-tab active" onclick="tsShowTab('squad', this)">Squad Selection</button>
+      <button class="ts-tab" onclick="tsShowTab('sheet', this)">Team Sheet</button>
+      <button class="ts-tab" onclick="tsShowTab('preview', this)">Preview & Export</button>
+      <button class="ts-tab" onclick="tsShowTab('social', this)">📸 Social Graphic</button>
     </div>
-    <div id="sel-panel" class="hidden">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px;">
-        <div id="sel-count" style="font-size:13px;color:var(--text3);">0 / 11 selected</div>
-        <div style="display:flex;gap:6px;">
-          <button class="btn btn-sm" onclick="clearSelection()">Clear</button>
-          <button class="btn btn-sm btn-primary" id="save-sel-btn" onclick="saveSelection()">Save Selection</button>
+
+    <!-- SQUAD SELECTION (original) -->
+    <div id="ts-squad" class="ts-section active">
+      <div class="form-row">
+        <label>Choose fixture</label>
+        <select id="sel-fixture" onchange="loadSelection()">
+          <option value="">&#x2014; select a fixture &#x2014;</option>
+        </select>
+      </div>
+      <div id="sel-panel" class="hidden">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px;">
+          <div id="sel-count" style="font-size:13px;color:var(--text3);">0 / 11 selected</div>
+          <div style="display:flex;gap:6px;">
+            <button class="btn btn-sm" onclick="clearSelection()">Clear</button>
+            <button class="btn btn-sm btn-primary" id="save-sel-btn" onclick="saveSelection()">Save Selection</button>
+            <button class="btn btn-sm" style="color:var(--accent);border-color:rgba(46,204,138,.3);" onclick="tsFillFromSelection()">→ Build Team Sheet</button>
+          </div>
+        </div>
+        <div id="sel-list" class="card" style="padding:8px 16px;"></div>
+        <div id="sel-summary" style="margin-top:12px;"></div>
+      </div>
+    </div>
+
+    <!-- TEAM SHEET BUILDER -->
+    <div id="ts-sheet" class="ts-section">
+      <div class="card" style="margin-bottom:12px;">
+        <div class="section-label" style="margin-bottom:12px;">Match Details</div>
+        <div class="form-2col">
+          <div class="form-row" style="margin-bottom:0;">
+            <label>Home team</label>
+            <input type="text" id="ts-home" value="Athlone 3" placeholder="e.g. Athlone 3">
+          </div>
+          <div class="form-row" style="margin-bottom:0;">
+            <label>Opposition</label>
+            <input type="text" id="ts-away" placeholder="e.g. Ongar 2">
+          </div>
+        </div>
+        <div class="form-2col" style="margin-top:10px;">
+          <div class="form-row" style="margin-bottom:0;">
+            <label>Division</label>
+            <input type="text" id="ts-division" placeholder="e.g. Division 16A">
+          </div>
+          <div class="form-row" style="margin-bottom:0;">
+            <label>Venue</label>
+            <input type="text" id="ts-venue" placeholder="e.g. Ringcommons">
+          </div>
+        </div>
+        <div class="form-row" style="margin-top:10px;margin-bottom:0;">
+          <label>Date</label>
+          <input type="date" id="ts-date" style="width:auto;">
         </div>
       </div>
-      <div id="sel-list" class="card" style="padding:8px 16px;"></div>
-      <div id="sel-summary" style="margin-top:12px;"></div>
+
+      <div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+          <div class="section-label" style="margin-bottom:0;">Team List</div>
+          <div style="display:flex;gap:6px;">
+            <button class="btn btn-sm" onclick="tsFillFromSquad()">Fill from squad</button>
+            <button class="btn btn-sm" onclick="tsAddPlayer()">+ Add player</button>
+          </div>
+        </div>
+        <div class="ts-col-header">
+          <span>#</span><span>Name</span><span>Role</span><span>Code</span><span></span>
+        </div>
+        <div id="ts-player-list"></div>
+      </div>
+
+      <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;">
+        <button class="btn btn-primary" onclick="tsGeneratePreview()">Generate Preview →</button>
+        <button class="btn" onclick="tsSaveSheet()">Save Sheet</button>
+        <span class="ts-status" id="ts-status"></span>
+      </div>
+    </div>
+
+    <!-- PREVIEW & EXPORT -->
+    <div id="ts-preview" class="ts-section">
+      <div class="card" id="ts-preview-content">
+        <div class="empty-state">Generate a team sheet to preview it here.</div>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;">
+        <button class="btn btn-primary" onclick="tsDownloadPDF()">⬇ Download PDF</button>
+        <button class="btn" onclick="tsShowTab('sheet', document.querySelectorAll('.ts-tab')[1])">← Edit</button>
+      </div>
+    </div>
+
+    <!-- SOCIAL GRAPHIC -->
+    <div id="ts-social" class="ts-section">
+      <div class="card" style="margin-bottom:12px;">
+        <div class="section-label" style="margin-bottom:14px;">Match Info</div>
+        <div class="form-2col">
+          <div class="form-row" style="margin-bottom:0;">
+            <label>Our Team</label>
+            <input type="text" id="sg-home" placeholder="e.g. Athlone Cricket Club 3">
+          </div>
+          <div class="form-row" style="margin-bottom:0;">
+            <label>Opposition</label>
+            <input type="text" id="sg-away" placeholder="e.g. Ongar">
+          </div>
+        </div>
+        <div class="form-2col" style="margin-top:10px;">
+          <div class="form-row" style="margin-bottom:0;">
+            <label>Match Type</label>
+            <input type="text" id="sg-type" placeholder="e.g. 1st League Match, 40 Overs">
+          </div>
+          <div class="form-row" style="margin-bottom:0;">
+            <label>Division</label>
+            <input type="text" id="sg-division" placeholder="e.g. Division 16">
+          </div>
+        </div>
+        <div class="form-2col" style="margin-top:10px;">
+          <div class="form-row" style="margin-bottom:0;">
+            <label>Date</label>
+            <input type="text" id="sg-date" placeholder="e.g. 26th April">
+          </div>
+          <div class="form-row" style="margin-bottom:0;">
+            <label>Venue</label>
+            <input type="text" id="sg-venue" placeholder="e.g. Ringcommons">
+          </div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-bottom:12px;">
+        <div class="section-label" style="margin-bottom:14px;">Captain's Photo</div>
+        <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;">
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer;background:var(--surface2);border:1px dashed var(--border2);border-radius:8px;padding:10px 16px;font-size:13px;color:var(--text2);transition:all .15s;" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border2)'">
+            📷 Upload Captain Photo
+            <input type="file" id="sg-captain-upload" accept="image/*" style="display:none;" onchange="sgLoadCaptainPhoto(this)">
+          </label>
+          <div id="sg-captain-preview" style="display:none;">
+            <img id="sg-captain-img" style="width:60px;height:60px;border-radius:50%;object-fit:cover;border:2px solid var(--accent);" src="" alt="">
+          </div>
+          <div style="flex:1;min-width:140px;">
+            <div class="form-row" style="margin-bottom:0;">
+              <label>Captain Name</label>
+              <input type="text" id="sg-captain-name" placeholder="e.g. Keith Brennan">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-bottom:12px;">
+        <div class="section-label" style="margin-bottom:14px;">Club Logo</div>
+        <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;">
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer;background:var(--surface2);border:1px dashed var(--border2);border-radius:8px;padding:10px 16px;font-size:13px;color:var(--text2);transition:all .15s;" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border2)'">
+            🏏 Upload Club Logo
+            <input type="file" id="sg-logo-upload" accept="image/*" style="display:none;" onchange="sgLoadLogo(this)">
+          </label>
+          <div id="sg-logo-preview" style="display:none;">
+            <img id="sg-logo-img" style="width:50px;height:50px;border-radius:50%;object-fit:cover;border:2px solid var(--accent);" src="" alt="">
+          </div>
+          <div style="font-size:12px;color:var(--text3);">Optional — uses app logo if not uploaded</div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-bottom:12px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+          <div class="section-label" style="margin-bottom:0;">Team List</div>
+          <button class="btn btn-sm" onclick="sgFillFromSheet()">Pull from Team Sheet</button>
+        </div>
+        <div id="sg-team-list"></div>
+        <button class="btn btn-sm" style="margin-top:10px;" onclick="sgAddPlayer()">+ Add Player</button>
+      </div>
+
+      <div style="display:flex;gap:8px;margin-top:4px;flex-wrap:wrap;align-items:center;">
+        <button class="btn btn-primary" onclick="sgGenerate()">🎨 Generate Image</button>
+        <button class="btn btn-sm" onclick="sgFillFromSheet()">Sync from Team Sheet</button>
+      </div>
+
+      <!-- Canvas preview -->
+      <div id="sg-canvas-wrap" style="display:none;margin-top:16px;">
+        <div style="font-size:12px;color:var(--text3);margin-bottom:8px;">Preview (scroll to see full image) — 1080×1080px</div>
+        <div style="overflow:auto;border-radius:var(--radius);border:1px solid var(--border);background:var(--surface2);padding:4px;">
+          <canvas id="sg-canvas" width="1080" height="1080" style="display:block;max-width:100%;border-radius:8px;"></canvas>
+        </div>
+        <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;">
+          <button class="btn btn-primary" onclick="sgDownload()">⬇ Download PNG (1080×1080)</button>
+          <button class="btn" onclick="sgGenerate()">↺ Regenerate</button>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -3490,6 +3715,626 @@ document.addEventListener('keydown', e => { if (e.key === 'Escape') closeLightbo
 
 renderHome();
 loadFromSheets();
+
+// ── TEAM SHEET ──────────────────────────────────────────────
+const TS_KEY = 'acc_teamsheet_v1';
+const TS_ROLES = ['Batsman','Bowler','All-rounder','Wicketkeeper','Captain','Vice-captain','Opening bat','Spinner','Pace bowler'];
+let tsPlayers = [];
+
+function tsShowTab(name, btn) {
+  document.querySelectorAll('.ts-tab').forEach(t => t.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  document.querySelectorAll('.ts-section').forEach(s => s.classList.remove('active'));
+  document.getElementById('ts-' + name).classList.add('active');
+}
+
+function tsRoleSelect(val) {
+  return '<select class="ts-role">' + TS_ROLES.map(r => '<option' + (r === val ? ' selected' : '') + '>' + r + '</option>').join('') + '</select>';
+}
+
+function tsRenderPlayers() {
+  const el = document.getElementById('ts-player-list');
+  if (!el) return;
+  el.innerHTML = tsPlayers.map((p, i) => {
+    const num = i === 0 ? 'C' : p.role === 'Wicketkeeper' ? 'WK' : (i + 1);
+    return '<div class="ts-player-row" data-idx="' + i + '">'
+      + '<div class="ts-num">' + num + '</div>'
+      + '<input class="ts-name" type="text" value="' + (p.name||'') + '" placeholder="Player name" oninput="tsPlayers[' + i + '].name=this.value">'
+      + '<select class="ts-role" onchange="tsPlayers[' + i + '].role=this.value;tsRenderPlayers()">' + TS_ROLES.map(r => '<option' + (r === p.role ? ' selected' : '') + '>' + r + '</option>').join('') + '</select>'
+      + '<input class="ts-code" type="text" value="' + (p.code||'') + '" placeholder="Code" oninput="tsPlayers[' + i + '].code=this.value">'
+      + '<button class="ts-remove" onclick="tsPlayers.splice(' + i + ',1);tsRenderPlayers()">✕</button>'
+      + '</div>';
+  }).join('');
+}
+
+function tsAddPlayer() {
+  tsPlayers.push({ name: '', role: 'Batsman', code: '' });
+  tsRenderPlayers();
+}
+
+function tsFillFromSquad() {
+  tsPlayers = players.slice(0, 11).map(function(p) {
+    return { name: full(p), role: p.role || 'Batsman', code: p.code || '' };
+  });
+  tsRenderPlayers();
+  // pre-fill match details if a fixture is selected
+  const mid = document.getElementById('sel-fixture') ? document.getElementById('sel-fixture').value : '';
+  if (mid) {
+    const match = matches.find(m => m.id === mid);
+    if (match) {
+      document.getElementById('ts-away').value = match.opponent || '';
+      document.getElementById('ts-date').value = match.date || '';
+    }
+  }
+}
+
+function tsFillFromSelection() {
+  const mid = document.getElementById('sel-fixture').value;
+  if (!mid) return;
+  const sel = selections[mid] || [];
+  const selPlayers = sel.map(id => players.find(p => p.id === id)).filter(Boolean);
+  if (!selPlayers.length) { alert('No players selected for this fixture yet.'); return; }
+  tsPlayers = selPlayers.map(function(p) {
+    return { name: full(p), role: p.role || 'Batsman', code: p.code || '' };
+  });
+  // Pre-fill match details
+  const match = matches.find(m => m.id === mid);
+  if (match) {
+    document.getElementById('ts-away').value = match.opponent || '';
+    document.getElementById('ts-date').value = match.date || '';
+    document.getElementById('ts-home').value = match.homeaway || match.team || 'Athlone 3';
+  }
+  // collect current input values into tsPlayers before switching
+  tsRenderPlayers();
+  tsShowTab('sheet', document.querySelectorAll('.ts-tab')[1]);
+}
+
+function tsSaveSheet() {
+  tsCollectFromDOM();
+  const data = {
+    home: document.getElementById('ts-home').value,
+    away: document.getElementById('ts-away').value,
+    division: document.getElementById('ts-division').value,
+    venue: document.getElementById('ts-venue').value,
+    date: document.getElementById('ts-date').value,
+    players: tsPlayers
+  };
+  localStorage.setItem(TS_KEY, JSON.stringify(data));
+  const s = document.getElementById('ts-status');
+  s.textContent = '✓ Saved';
+  setTimeout(() => s.textContent = '', 2000);
+}
+
+function tsLoadSaved() {
+  try {
+    const d = JSON.parse(localStorage.getItem(TS_KEY) || 'null');
+    if (!d) return;
+    if (d.home) document.getElementById('ts-home').value = d.home;
+    if (d.away) document.getElementById('ts-away').value = d.away;
+    if (d.division) document.getElementById('ts-division').value = d.division;
+    if (d.venue) document.getElementById('ts-venue').value = d.venue;
+    if (d.date) document.getElementById('ts-date').value = d.date;
+    if (d.players) { tsPlayers = d.players; tsRenderPlayers(); }
+  } catch(e) {}
+}
+
+function tsCollectFromDOM() {
+  document.querySelectorAll('#ts-player-list .ts-player-row').forEach(function(row, i) {
+    if (!tsPlayers[i]) return;
+    tsPlayers[i].name = row.querySelector('.ts-name').value.trim();
+    tsPlayers[i].role = row.querySelector('.ts-role').value;
+    tsPlayers[i].code = row.querySelector('.ts-code').value.trim();
+  });
+}
+
+function tsGeneratePreview() {
+  tsCollectFromDOM();
+  const home = document.getElementById('ts-home').value.trim() || 'Athlone';
+  const away = document.getElementById('ts-away').value.trim() || 'TBD';
+  const division = document.getElementById('ts-division').value.trim();
+  const dateVal = document.getElementById('ts-date').value;
+  const venue = document.getElementById('ts-venue').value.trim();
+  const date = dateVal ? new Date(dateVal).toLocaleDateString('en-GB') : '';
+  const ps = tsPlayers.filter(p => p.name);
+
+  const previewEl = document.getElementById('ts-preview-content');
+  previewEl.innerHTML = `
+    <div class="ts-preview-header">
+      <div class="ts-preview-club">Athlone Cricket Club</div>
+      <div class="ts-preview-title">${away} v ${home}</div>
+      ${division ? '<div class="ts-preview-sub">' + division + '</div>' : ''}
+      <div class="ts-preview-sub">${date}${venue ? ' &nbsp;|&nbsp; ' + venue : ''}</div>
+    </div>
+    <table class="ts-preview-table">
+      <thead><tr>
+        <th style="width:40px;">#</th>
+        <th>Name</th>
+        <th>Role</th>
+        <th>Code</th>
+        <th style="width:80px;text-align:center;">Age Group</th>
+      </tr></thead>
+      <tbody>${ps.map((p, i) => {
+        const isCapt = i === 0;
+        const isWK = p.role === 'Wicketkeeper' && i !== 0;
+        const numLabel = isCapt ? '' : isWK ? '' : (i + 1);
+        const badge = isCapt ? '<span class="ts-badge-c" style="margin-left:6px;">C</span>' : isWK ? '<span class="ts-badge-wk" style="margin-left:6px;">WK</span>' : '';
+        return '<tr>'
+          + '<td style="color:var(--text3);font-weight:700;">' + numLabel + '</td>'
+          + '<td style="font-weight:' + (isCapt || isWK ? '700' : '500') + ';color:var(--text);">' + p.name + badge + '</td>'
+          + '<td style="color:var(--text3);font-size:12px;">' + (isCapt ? 'Captain' : p.role) + '</td>'
+          + '<td style="color:var(--text3);font-size:11px;font-family:monospace;">' + (p.code||'') + '</td>'
+          + '<td style="text-align:center;"><div style="width:54px;height:20px;border:1px solid var(--border2);border-radius:3px;display:inline-block;"></div></td>'
+          + '</tr>';
+      }).join('')}</tbody>
+    </table>
+    <div class="ts-sign-row">
+      <div><div class="ts-sign-label">Scorer</div><div class="ts-sign-line"></div></div>
+      <div><div class="ts-sign-label">Cricket Leinster Official</div><div class="ts-sign-line"></div></div>
+    </div>
+    <div class="ts-footer-note">I confirm that I am an authorise signatory on behalf of the club and that I gave read and understood the Cricket Ireland Concussion Protocol and Cricket Ireland Fast Bowling Directives. I agree that prior to the toss I have discussed with the umpire the age group of young players taking part in this match. I agree that the nominated players listed are a true record.</div>
+  `;
+  tsShowTab('preview', document.querySelectorAll('.ts-tab')[2]);
+}
+
+function tsDownloadPDF() {
+  if (typeof window.jspdf === 'undefined') {
+    const script = document.createElement('script');
+    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
+    script.onload = tsDownloadPDF;
+    document.head.appendChild(script);
+    return;
+  }
+  tsCollectFromDOM();
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ unit: 'mm', format: 'a4' });
+  const home = document.getElementById('ts-home').value.trim() || 'Athlone';
+  const away = document.getElementById('ts-away').value.trim() || 'TBD';
+  const division = document.getElementById('ts-division').value.trim();
+  const dateVal = document.getElementById('ts-date').value;
+  const venue = document.getElementById('ts-venue').value.trim();
+  const date = dateVal ? new Date(dateVal).toLocaleDateString('en-GB') : '';
+  const ps = tsPlayers.filter(p => p.name);
+  const pageW = 210, margin = 20, usable = pageW - margin * 2;
+
+  doc.setFillColor(26, 92, 55);
+  doc.rect(0, 0, 210, 18, 'F');
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(10);
+  doc.setTextColor(255, 255, 255);
+  doc.text('ATHLONE CRICKET CLUB', pageW / 2, 11, { align: 'center' });
+
+  let y = 30;
+  doc.setTextColor(30, 30, 30);
+  doc.setFontSize(15);
+  doc.text(away + ' v ' + home, pageW / 2, y, { align: 'center' });
+  y += 7;
+  doc.setFontSize(11); doc.setFont('helvetica', 'normal'); doc.setTextColor(80, 80, 80);
+  if (division) { doc.text(division, pageW / 2, y, { align: 'center' }); y += 6; }
+  const sub = [date, venue].filter(Boolean).join('   |   ');
+  if (sub) { doc.text(sub, pageW / 2, y, { align: 'center' }); y += 6; }
+  y += 4;
+  doc.setDrawColor(200, 200, 200); doc.line(margin, y, pageW - margin, y); y += 6;
+
+  const cols = { num: margin, name: margin + 14, role: margin + 80, code: margin + 132, age: margin + 160 };
+  doc.setFontSize(9); doc.setTextColor(120, 120, 120); doc.setFont('helvetica', 'bold');
+  ['#','Name','Role','Code','Age Group'].forEach((h, i) => {
+    doc.text(h, [cols.num, cols.name, cols.role, cols.code, cols.age][i], y);
+  });
+  y += 3; doc.line(margin, y, pageW - margin, y); y += 5;
+
+  doc.setFontSize(10);
+  ps.forEach((p, i) => {
+    const isCapt = i === 0, isWK = p.role === 'Wicketkeeper' && i !== 0;
+    const numLabel = isCapt ? 'C' : isWK ? 'WK' : String(i + 1);
+    doc.setFont('helvetica', isCapt || isWK ? 'bold' : 'normal');
+    doc.setTextColor(100, 100, 100); doc.text(numLabel, cols.num + 3, y, { align: 'center' });
+    doc.setTextColor(30, 30, 30); doc.text(p.name, cols.name, y);
+    doc.setFont('helvetica', 'normal'); doc.setTextColor(100, 100, 100); doc.setFontSize(9);
+    doc.text(isCapt ? 'Captain' : p.role, cols.role, y);
+    doc.text(p.code || '', cols.code, y);
+    doc.setFontSize(10);
+    doc.setDrawColor(220, 220, 220); doc.rect(cols.age, y - 4, 22, 6);
+    y += 3; doc.setDrawColor(235, 235, 235); doc.line(margin, y, pageW - margin, y); y += 5;
+  });
+
+  y += 4;
+  doc.setDrawColor(180, 180, 180);
+  doc.line(margin, y, margin + 70, y); doc.setFontSize(9); doc.setTextColor(120, 120, 120);
+  doc.text('Scorer', margin, y + 4);
+  doc.line(margin + 80, y, margin + 150, y);
+  doc.text('Cricket Leinster Official', margin + 80, y + 4);
+  y += 16;
+  doc.setFontSize(8); doc.setTextColor(130, 130, 130);
+  const disclaimer = 'I confirm that I am an authorise signatory on behalf of the club and that I gave read and understood the Cricket Ireland Concussion Protocol and Cricket Ireland Fast Bowling Directives. I agree that prior to the toss I have discussed with the umpire the age group of young players taking part in this match. I agree that the nominated players listed are a true record.';
+  doc.text(doc.splitTextToSize(disclaimer, usable), margin, y);
+
+  doc.save('TeamSheet_' + (away || 'Match').replace(/\s+/g,'_') + '_' + (date || '2026').replace(/\//g,'-') + '.pdf');
+}
+
+// Init team sheet on selection tab open
+(function() {
+  const origShow = window.showPage;
+  window.showPage = function(name, btn) {
+    origShow(name, btn);
+    if (name === 'selection') {
+      setTimeout(function() {
+        tsLoadSaved();
+        if (!tsPlayers.length && players.length) {
+          tsPlayers = players.slice(0, 11).map(p => ({ name: full(p), role: p.role || 'Batsman', code: p.code || '' }));
+          tsRenderPlayers();
+        }
+        const today = new Date().toISOString().split('T')[0];
+        if (!document.getElementById('ts-date').value) document.getElementById('ts-date').value = today;
+      }, 50);
+    }
+  };
+})();
+
+// ── SOCIAL GRAPHIC ───────────────────────────────────────────
+let sgCaptainImg = null;
+let sgLogoImg = null;
+let sgPlayers = [];
+const SG_BADGE = { '(C)': '(C)', '(VC)': '(VC)', 'WK': 'WK', '': '' };
+
+function sgLoadCaptainPhoto(input) {
+  const file = input.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    sgCaptainImg = new Image();
+    sgCaptainImg.onload = function() {
+      document.getElementById('sg-captain-img').src = e.target.result;
+      document.getElementById('sg-captain-preview').style.display = 'flex';
+    };
+    sgCaptainImg.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+function sgLoadLogo(input) {
+  const file = input.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    sgLogoImg = new Image();
+    sgLogoImg.onload = function() {
+      document.getElementById('sg-logo-img').src = e.target.result;
+      document.getElementById('sg-logo-preview').style.display = 'flex';
+    };
+    sgLogoImg.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+function sgRenderPlayerList() {
+  const el = document.getElementById('sg-team-list'); if (!el) return;
+  const badgeOpts = ['', '(C)', '(VC)', 'WK'];
+  el.innerHTML = sgPlayers.map((p, i) => `
+    <div class="sg-player-row">
+      <div class="sg-num">${i + 1}</div>
+      <input type="text" value="${p.name||''}" placeholder="Player name" oninput="sgPlayers[${i}].name=this.value">
+      <select onchange="sgPlayers[${i}].badge=this.value">${badgeOpts.map(b=>`<option${b===p.badge?' selected':''}>${b}</option>`).join('')}</select>
+      <button class="ts-remove" onclick="sgPlayers.splice(${i},1);sgRenderPlayerList()">✕</button>
+    </div>`).join('');
+}
+
+function sgAddPlayer() {
+  sgPlayers.push({ name: '', badge: '' });
+  sgRenderPlayerList();
+}
+
+function sgFillFromSheet() {
+  // Collect latest from ts dom
+  document.querySelectorAll('#ts-player-list .ts-player-row').forEach(function(row, i) {
+    if (!tsPlayers[i]) return;
+    tsPlayers[i].name = row.querySelector('.ts-name').value.trim();
+    tsPlayers[i].role = row.querySelector('.ts-role').value;
+    tsPlayers[i].code = row.querySelector('.ts-code').value.trim();
+  });
+  sgPlayers = tsPlayers.filter(p => p.name).map((p, i) => {
+    let badge = '';
+    if (i === 0) badge = '(C)';
+    else if (p.role === 'Wicketkeeper') badge = 'WK';
+    return { name: p.name, badge };
+  });
+  // Also sync match details
+  const home = document.getElementById('ts-home').value;
+  const away = document.getElementById('ts-away').value;
+  const division = document.getElementById('ts-division').value;
+  const venue = document.getElementById('ts-venue').value;
+  const dateVal = document.getElementById('ts-date').value;
+  if (home) document.getElementById('sg-home').value = home;
+  if (away) document.getElementById('sg-away').value = away;
+  if (division) document.getElementById('sg-division').value = division;
+  if (venue) document.getElementById('sg-venue').value = venue;
+  if (dateVal) {
+    const d = new Date(dateVal);
+    const day = d.getDate();
+    const suffix = day === 1||day===21||day===31?'st':day===2||day===22?'nd':day===3||day===23?'rd':'th';
+    const months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+    document.getElementById('sg-date').value = day + suffix + ' ' + months[d.getMonth()];
+  }
+  // Captain name from first player
+  if (tsPlayers[0] && tsPlayers[0].name) document.getElementById('sg-captain-name').value = tsPlayers[0].name;
+  sgRenderPlayerList();
+}
+
+function sgGenerate() {
+  // collect current player inputs
+  document.querySelectorAll('#sg-team-list .sg-player-row').forEach(function(row, i) {
+    if (!sgPlayers[i]) return;
+    sgPlayers[i].name = row.querySelector('input[type=text]').value.trim();
+    sgPlayers[i].badge = row.querySelector('select').value;
+  });
+
+  const canvas = document.getElementById('sg-canvas');
+  const ctx = canvas.getContext('2d');
+  const W = 1080, H = 1080;
+  canvas.width = W; canvas.height = H;
+
+  // ── BACKGROUND: dark green grass ──
+  const bgGrad = ctx.createLinearGradient(0, 0, 0, H);
+  bgGrad.addColorStop(0, '#0d2e10');
+  bgGrad.addColorStop(0.5, '#173d1a');
+  bgGrad.addColorStop(1, '#0a2010');
+  ctx.fillStyle = bgGrad;
+  ctx.fillRect(0, 0, W, H);
+
+  // Grass texture lines
+  ctx.save();
+  ctx.globalAlpha = 0.06;
+  ctx.strokeStyle = '#4caf50';
+  ctx.lineWidth = 2;
+  for (let i = 0; i < H; i += 28) {
+    ctx.beginPath(); ctx.moveTo(0, i); ctx.lineTo(W, i); ctx.stroke();
+  }
+  ctx.restore();
+
+  // ── DECORATIVE corner wickets (simple lines) ──
+  function drawWicket(x, y, scale, opacity) {
+    ctx.save(); ctx.globalAlpha = opacity; ctx.strokeStyle = '#d4a83a'; ctx.lineWidth = 3 * scale;
+    [-12, 0, 12].forEach(dx => {
+      ctx.beginPath(); ctx.moveTo(x + dx * scale, y); ctx.lineTo(x + dx * scale, y - 60 * scale); ctx.stroke();
+    });
+    ctx.fillStyle = '#d4a83a'; ctx.fillRect(x - 18 * scale, y - 65 * scale, 36 * scale, 6 * scale);
+    ctx.restore();
+  }
+  drawWicket(60, 140, 0.7, 0.35);
+  drawWicket(1020, 160, 0.8, 0.3);
+  drawWicket(40, 960, 0.65, 0.25);
+  drawWicket(1035, 940, 0.7, 0.28);
+
+  // ── Cricket ball decorations ──
+  function drawBall(x, y, r, alpha) {
+    ctx.save(); ctx.globalAlpha = alpha;
+    ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2);
+    const g = ctx.createRadialGradient(x - r * 0.3, y - r * 0.3, r * 0.1, x, y, r);
+    g.addColorStop(0, '#cc3333'); g.addColorStop(1, '#7a1010');
+    ctx.fillStyle = g; ctx.fill();
+    ctx.strokeStyle = '#ff6666'; ctx.lineWidth = 1.5; ctx.globalAlpha = alpha * 0.5;
+    ctx.beginPath(); ctx.arc(x, y, r * 0.6, 0.3, Math.PI - 0.3); ctx.stroke();
+    ctx.restore();
+  }
+  drawBall(90, 90, 52, 0.85);
+  drawBall(990, 80, 48, 0.8);
+  drawBall(60, 990, 44, 0.7);
+  drawBall(1010, 1000, 50, 0.75);
+
+  // ── HEADER BAND ──
+  ctx.fillStyle = '#0a1f0c';
+  ctx.fillRect(0, 0, W, 155);
+  // Gold border bottom
+  const goldGrad = ctx.createLinearGradient(0, 0, W, 0);
+  goldGrad.addColorStop(0, '#8a6200'); goldGrad.addColorStop(0.3, '#d4a83a');
+  goldGrad.addColorStop(0.7, '#d4a83a'); goldGrad.addColorStop(1, '#8a6200');
+  ctx.fillStyle = goldGrad; ctx.fillRect(0, 150, W, 5);
+
+  // UPCOMING MATCH text
+  ctx.save();
+  ctx.font = 'bold 72px Impact, Arial Black, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.shadowColor = 'rgba(0,0,0,0.8)'; ctx.shadowBlur = 8;
+  ctx.fillStyle = '#ffffff'; ctx.fillText('UPCOMING MATCH', W/2, 95);
+  // Match type
+  const matchType = document.getElementById('sg-type').value || '1st League Match, 40 Overs';
+  ctx.font = 'bold 30px Arial, sans-serif';
+  ctx.fillStyle = '#d4a83a'; ctx.fillText(matchType.toUpperCase(), W/2, 138);
+  ctx.restore();
+
+  // ── TEAMS BANNER ──
+  const bannerY = 158, bannerH = 160;
+  // Left: green (Athlone)
+  ctx.fillStyle = '#1a5c1a'; ctx.fillRect(0, bannerY, W * 0.42, bannerH);
+  // Right: maroon (opposition)
+  ctx.fillStyle = '#6b1a1a'; ctx.fillRect(W * 0.58, bannerY, W * 0.42, bannerH);
+  // Center: dark
+  ctx.fillStyle = '#0f1e10'; ctx.fillRect(W * 0.38, bannerY, W * 0.24, bannerH);
+  // Gold separator lines
+  ctx.fillStyle = goldGrad;
+  ctx.fillRect(W * 0.38, bannerY, 4, bannerH);
+  ctx.fillRect(W * 0.62 - 4, bannerY, 4, bannerH);
+  // Bottom border
+  ctx.fillStyle = goldGrad; ctx.fillRect(0, bannerY + bannerH, W, 5);
+
+  // Team names
+  ctx.save(); ctx.textAlign = 'center'; ctx.shadowColor = 'rgba(0,0,0,0.6)'; ctx.shadowBlur = 6;
+  const homeText = (document.getElementById('sg-home').value || 'ATHLONE CRICKET CLUB 3').toUpperCase();
+  const awayText = (document.getElementById('sg-away').value || 'ONGAR').toUpperCase();
+
+  // Athlone side — split into two lines if long
+  ctx.fillStyle = '#ffffff'; ctx.font = 'bold 46px Impact, Arial Black, sans-serif';
+  const homeLines = homeText.length > 14 ? [homeText.substring(0, homeText.lastIndexOf(' ', Math.floor(homeText.length/2)) || Math.floor(homeText.length/2)), homeText.substring(homeText.lastIndexOf(' ', Math.floor(homeText.length/2)) + 1 || Math.floor(homeText.length/2))] : [homeText];
+  homeLines.forEach((line, li) => ctx.fillText(line, W * 0.19, bannerY + 60 + li * 52));
+
+  // VS
+  ctx.font = 'bold 64px Impact, Arial Black, sans-serif';
+  ctx.fillStyle = '#d4a83a'; ctx.fillText('VS', W/2, bannerY + 100);
+
+  // Away side
+  ctx.fillStyle = '#ffffff'; ctx.font = 'bold 54px Impact, Arial Black, sans-serif';
+  ctx.fillText(awayText, W * 0.79, bannerY + 90);
+  ctx.restore();
+
+  // Club logos in banner
+  function drawCircleLogo(img, cx, cy, r) {
+    ctx.save();
+    ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.clip();
+    ctx.drawImage(img, cx - r, cy - r, r * 2, r * 2);
+    ctx.restore();
+    ctx.save();
+    ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2);
+    ctx.strokeStyle = '#d4a83a'; ctx.lineWidth = 4; ctx.stroke();
+    ctx.restore();
+  }
+
+  const logoToDraw = sgLogoImg || (function() {
+    // Use the app's embedded logo
+    const appLogo = document.querySelector('.club-logo');
+    if (appLogo && appLogo.complete) { const img = new Image(); img.src = appLogo.src; return img; }
+    return null;
+  })();
+
+  const drawTeamsAndRest = function() {
+    if (logoToDraw) drawCircleLogo(logoToDraw, W * 0.38, bannerY + bannerH/2, 55);
+
+    // ── DATE / DIVISION / VENUE BAR ──
+    const infoY = bannerY + bannerH + 5;
+    ctx.fillStyle = '#1a1a1a'; ctx.fillRect(0, infoY, W, 68);
+    ctx.fillStyle = '#ffd700'; ctx.fillRect(0, infoY + 63, W, 3);
+    ctx.save(); ctx.textAlign = 'center'; ctx.font = 'bold 26px Arial, sans-serif'; ctx.fillStyle = '#ffffff';
+    const dateStr = document.getElementById('sg-date').value || '26th April';
+    const divStr = document.getElementById('sg-division').value || 'Division 16';
+    const venueStr = document.getElementById('sg-venue').value || 'Ringcommons';
+    ctx.fillText('DATE : ' + dateStr.toUpperCase() + '  |  ' + divStr.toUpperCase() + '  |  VENUE: ' + venueStr.toUpperCase(), W/2, infoY + 42);
+    ctx.restore();
+
+    // ── MAIN CONTENT AREA ──
+    const contentY = infoY + 74;
+    const contentH = H - contentY - 90;
+
+    // Captain photo section (left half)
+    const captainX = 60, captainW = 380, captainCX = captainX + captainW/2;
+    const captainCY = contentY + contentH * 0.42;
+    const captainR = 155;
+
+    if (sgCaptainImg) {
+      // Outer glow ring (gold)
+      ctx.save(); ctx.shadowColor = '#d4a83a'; ctx.shadowBlur = 30;
+      ctx.beginPath(); ctx.arc(captainCX, captainCY, captainR + 10, 0, Math.PI * 2);
+      ctx.strokeStyle = '#d4a83a'; ctx.lineWidth = 6; ctx.stroke();
+      ctx.restore();
+      // Photo
+      ctx.save();
+      ctx.beginPath(); ctx.arc(captainCX, captainCY, captainR, 0, Math.PI * 2); ctx.clip();
+      ctx.drawImage(sgCaptainImg, captainCX - captainR, captainCY - captainR, captainR * 2, captainR * 2);
+      ctx.restore();
+      // Inner border
+      ctx.save(); ctx.beginPath(); ctx.arc(captainCX, captainCY, captainR, 0, Math.PI * 2);
+      ctx.strokeStyle = '#d4a83a'; ctx.lineWidth = 4; ctx.stroke(); ctx.restore();
+    } else {
+      // Placeholder circle
+      ctx.save(); ctx.globalAlpha = 0.3;
+      ctx.beginPath(); ctx.arc(captainCX, captainCY, captainR, 0, Math.PI * 2);
+      ctx.fillStyle = '#d4a83a'; ctx.fill(); ctx.restore();
+      ctx.save(); ctx.textAlign = 'center'; ctx.fillStyle = '#ffffff'; ctx.font = '28px Arial, sans-serif'; ctx.globalAlpha = 0.7;
+      ctx.fillText('Upload Captain', captainCX, captainCY - 10);
+      ctx.fillText('Photo', captainCX, captainCY + 30); ctx.restore();
+    }
+
+    // Captain name label
+    const captainName = document.getElementById('sg-captain-name').value || 'Captain';
+    ctx.save();
+    ctx.fillStyle = 'rgba(0,0,0,0.65)';
+    const cnW = 320, cnH = 48;
+    roundRect(ctx, captainCX - cnW/2, captainCY + captainR + 16, cnW, cnH, 8);
+    ctx.fill();
+    ctx.strokeStyle = '#d4a83a'; ctx.lineWidth = 2; ctx.stroke();
+    ctx.textAlign = 'center'; ctx.font = 'bold 28px Arial, sans-serif'; ctx.fillStyle = '#ffffff';
+    ctx.shadowColor = 'rgba(0,0,0,0.8)'; ctx.shadowBlur = 4;
+    ctx.fillText(captainName.toUpperCase() + ' (C)', captainCX, captainCY + captainR + 48);
+    ctx.restore();
+
+    // ── TEAM LIST (right side) ──
+    const listX = 470, listY = contentY + 10;
+    const lineH = 62;
+    const collected = [];
+    document.querySelectorAll('#sg-team-list .sg-player-row').forEach(function(row, i) {
+      collected.push({
+        name: row.querySelector('input[type=text]').value.trim(),
+        badge: row.querySelector('select').value
+      });
+    });
+    const displayPlayers = collected.length ? collected : sgPlayers;
+
+    displayPlayers.slice(0, 11).forEach((p, i) => {
+      const y = listY + i * lineH + lineH/2;
+      // Row bg (alternating subtle)
+      ctx.save(); ctx.globalAlpha = i % 2 === 0 ? 0.08 : 0.04;
+      ctx.fillStyle = '#ffffff'; ctx.fillRect(listX - 10, y - lineH/2 + 4, W - listX + 10 - 30, lineH - 8);
+      ctx.restore();
+
+      // Number
+      ctx.save(); ctx.font = 'bold 28px Arial, sans-serif'; ctx.fillStyle = '#d4a83a';
+      ctx.textAlign = 'right'; ctx.fillText((i + 1) + '.', listX + 28, y + 10);
+      ctx.restore();
+
+      // Name
+      ctx.save(); ctx.font = 'bold 34px Arial, sans-serif';
+      ctx.fillStyle = i === 0 ? '#ffffff' : '#e8ede9';
+      ctx.textAlign = 'left'; ctx.shadowColor = 'rgba(0,0,0,0.6)'; ctx.shadowBlur = 4;
+      ctx.fillText(p.name ? p.name.toUpperCase() : '', listX + 40, y + 12);
+      ctx.restore();
+
+      // Badge (C), (VC), WK
+      if (p.badge) {
+        const nameW = ctx.measureText((p.name||'').toUpperCase()).width;
+        ctx.save(); ctx.font = 'bold 24px Arial, sans-serif';
+        ctx.fillStyle = '#d4a83a'; ctx.textAlign = 'left';
+        ctx.fillText(' ' + p.badge, listX + 40 + nameW + 2, y + 10);
+        ctx.restore();
+      }
+    });
+
+    // ── FOOTER ──
+    ctx.fillStyle = 'rgba(0,0,0,0.75)'; ctx.fillRect(0, H - 88, W, 88);
+    ctx.fillStyle = goldGrad; ctx.fillRect(0, H - 88, W, 3);
+    ctx.save(); ctx.textAlign = 'center'; ctx.font = 'bold 22px Arial, sans-serif'; ctx.fillStyle = '#ffffff';
+    ctx.fillText('🏏  FOLLOW US FOR LIVE UPDATES!  #ATHLONECC  #LEINSTERCRICKET', W/2, H - 52);
+    ctx.font = '18px Arial, sans-serif'; ctx.fillStyle = '#d4a83a';
+    ctx.fillText('SOCIAL GRAPHIC  |  1080×1080', W/2, H - 22);
+    ctx.restore();
+
+    document.getElementById('sg-canvas-wrap').style.display = 'block';
+  };
+
+  if (logoToDraw && !logoToDraw.complete) {
+    logoToDraw.onload = drawTeamsAndRest;
+  } else {
+    drawTeamsAndRest();
+  }
+}
+
+function roundRect(ctx, x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.lineTo(x + w - r, y);
+  ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+  ctx.lineTo(x + w, y + h - r);
+  ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+  ctx.lineTo(x + r, y + h);
+  ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+  ctx.lineTo(x, y + r);
+  ctx.quadraticCurveTo(x, y, x + r, y);
+  ctx.closePath();
+}
+
+function sgDownload() {
+  const canvas = document.getElementById('sg-canvas');
+  const link = document.createElement('a');
+  const away = document.getElementById('sg-away').value || 'Match';
+  const date = document.getElementById('sg-date').value || '';
+  link.download = 'AthloneCC_' + away.replace(/\s+/g,'_') + (date ? '_' + date.replace(/\s+/g,'') : '') + '.png';
+  link.href = canvas.toDataURL('image/png');
+  link.click();
+}
 </script>
 
 <div id="modal-kit-bg" class="modal-backdrop hidden" onclick="if(event.target===this)closeKitModal()">
