@@ -711,6 +711,86 @@
 
 
   /* Home Page */
+  /* Live Score Widget */
+  .live-score-widget {
+    background: linear-gradient(135deg, #011f0f, #012d1a);
+    border: 1px solid rgba(57,255,20,0.3);
+    border-radius: 14px;
+    padding: 14px 16px;
+    margin-bottom: 16px;
+    position: relative;
+    overflow: hidden;
+  }
+  .live-score-widget::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse 80% 60% at 0% 0%, rgba(57,255,20,0.06), transparent);
+    pointer-events: none;
+  }
+  .lsw-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+  }
+  .lsw-title {
+    font-size: 11px;
+    color: #39ff14;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .lsw-dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: #39ff14;
+    animation: lsw-pulse 1.5s infinite;
+  }
+  @keyframes lsw-pulse {
+    0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(57,255,20,0.4)}
+    50%{opacity:.7;box-shadow:0 0 0 5px rgba(57,255,20,0)}
+  }
+  .lsw-open-btn {
+    font-size: 11px;
+    color: #39ff14;
+    background: rgba(57,255,20,0.1);
+    border: 1px solid rgba(57,255,20,0.35);
+    border-radius: 6px;
+    padding: 4px 10px;
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 600;
+    transition: all 0.2s;
+    text-decoration: none;
+  }
+  .lsw-open-btn:hover { background: rgba(57,255,20,0.2); }
+  .lsw-match-card {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(57,255,20,0.15);
+    border-radius: 10px;
+    padding: 12px 14px;
+    margin-bottom: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-decoration: none;
+    display: block;
+    color: inherit;
+  }
+  .lsw-match-card:hover { border-color: rgba(57,255,20,0.4); background: rgba(57,255,20,0.06); }
+  .lsw-match-title { font-size: 13px; font-weight: 700; color: var(--text); margin-bottom: 5px; }
+  .lsw-match-score { display: flex; align-items: baseline; gap: 4px; margin-bottom: 3px; }
+  .lsw-runs { font-family: 'Playfair Display', serif; font-size: 26px; font-weight: 900; color: #fff; line-height: 1; }
+  .lsw-sep { font-size: 16px; color: rgba(255,255,255,0.3); }
+  .lsw-wkts { font-family: 'Playfair Display', serif; font-size: 18px; color: rgba(255,255,255,0.5); }
+  .lsw-meta { font-size: 11px; color: var(--text3); }
+  .lsw-rr { color: #39ff14; font-weight: 600; }
+  .lsw-empty { font-size: 13px; color: var(--text3); padding: 6px 0; }
+  .lsw-loading { font-size: 12px; color: var(--text3); padding: 4px 0; }
+
   .home-section-title {
     font-family: 'Playfair Display', serif;
     font-size: 16px; font-weight: 700;
@@ -810,11 +890,20 @@
     <button class="nav-btn" onclick="showPage('selection', this)">Selection</button>
     <button class="nav-btn" onclick="showPage('results', this)">Results</button>
     <button class="nav-btn" onclick="showPage('practice', this)">Practice</button>
-    <button class="nav-btn" onclick="window.open('https://misramrit-maker.github.io/MyCricketTeam/','_blank')" style="color:var(--gold);background:var(--gold-dim);">Scoring ↗</button>
+    <button class="nav-btn" onclick="window.open('https://misramrit-maker.github.io/ACC-Scoring/','_blank')" style="color:var(--gold);background:var(--gold-dim);">🏏 Scoring ↗</button>
+    <button class="nav-btn" onclick="window.open('https://misramrit-maker.github.io/ACC-Scoring/live.html','_blank')" style="color:#39ff14;background:rgba(57,255,20,0.1);border:1px solid rgba(57,255,20,0.3);">🔴 Live ↗</button>
   </nav>
 
   <!-- HOME -->
   <div id="page-home" class="page active">
+    <!-- LIVE SCORE WIDGET -->
+    <div class="live-score-widget" id="live-score-widget">
+      <div class="lsw-header">
+        <div class="lsw-title"><div class="lsw-dot"></div>Live Scores</div>
+        <a class="lsw-open-btn" href="https://misramrit-maker.github.io/ACC-Scoring/live.html" target="_blank">View All ↗</a>
+      </div>
+      <div id="lsw-content"><div class="lsw-loading">Loading live scores...</div></div>
+    </div>
     <div id="home-upcoming-matches"></div>
     <div id="home-results-summary"></div>
     <div id="home-practice-sessions"></div>
@@ -3808,9 +3897,22 @@ function tsFillFromSelection() {
   // Pre-fill match details
   const match = matches.find(m => m.id === mid);
   if (match) {
-    document.getElementById('ts-away').value = match.opponent || '';
+    const athloneTeam = match.team || 'Athlone';
+    const opponent = match.opponent || '';
+    const isHome = (match.homeaway || '').toUpperCase() === 'H';
+    const isAway = (match.homeaway || '').toUpperCase() === 'A';
+    if (isHome) {
+      document.getElementById('ts-home').value = athloneTeam;
+      document.getElementById('ts-away').value = opponent;
+    } else if (isAway) {
+      document.getElementById('ts-home').value = opponent;
+      document.getElementById('ts-away').value = athloneTeam;
+    } else {
+      // Neutral — keep as-is
+      document.getElementById('ts-home').value = athloneTeam;
+      document.getElementById('ts-away').value = opponent;
+    }
     document.getElementById('ts-date').value = match.date || '';
-    document.getElementById('ts-home').value = match.homeaway || match.team || 'Athlone 3';
   }
   // collect current input values into tsPlayers before switching
   tsRenderPlayers();
@@ -3869,7 +3971,7 @@ function tsGeneratePreview() {
   previewEl.innerHTML = `
     <div class="ts-preview-header">
       <div class="ts-preview-club">Athlone Cricket Club</div>
-      <div class="ts-preview-title">${away} v ${home}</div>
+      <div class="ts-preview-title">${home} v ${away}</div>
       ${division ? '<div class="ts-preview-sub">' + division + '</div>' : ''}
       <div class="ts-preview-sub">${date}${venue ? ' &nbsp;|&nbsp; ' + venue : ''}</div>
     </div>
@@ -3934,7 +4036,7 @@ function tsDownloadPDF() {
   let y = 30;
   doc.setTextColor(30, 30, 30);
   doc.setFontSize(15);
-  doc.text(away + ' v ' + home, pageW / 2, y, { align: 'center' });
+  doc.text(home + ' v ' + away, pageW / 2, y, { align: 'center' });
   y += 7;
   doc.setFontSize(11); doc.setFont('helvetica', 'normal'); doc.setTextColor(80, 80, 80);
   if (division) { doc.text(division, pageW / 2, y, { align: 'center' }); y += 6; }
@@ -4282,7 +4384,6 @@ function sgGenerate() {
 
     // ── TEAM LIST (right side) ──
     const listX = 470, listY = contentY + 10;
-    const lineH = 62;
     const collected = [];
     document.querySelectorAll('#sg-team-list .sg-player-row').forEach(function(row, i) {
       collected.push({
@@ -4291,8 +4392,18 @@ function sgGenerate() {
       });
     });
     const displayPlayers = collected.length ? collected : sgPlayers;
+    const playerCount = Math.max(displayPlayers.filter(p => p.name).length, 1);
+    // Cap at what can physically fit (minimum 14px font = ~27px line height → max ~21 rows)
+    const maxPlayers = Math.min(playerCount, 21);
 
-    displayPlayers.slice(0, 11).forEach((p, i) => {
+    // Auto-scale: calculate available height and derive lineH and font sizes
+    const listAvailH = contentH - 20;
+    const lineH = Math.min(62, Math.floor(listAvailH / maxPlayers));
+    const nameFontSize = Math.min(34, Math.max(14, Math.floor(lineH * 0.52)));
+    const numFontSize = Math.min(28, Math.max(12, Math.floor(lineH * 0.43)));
+    const badgeFontSize = Math.min(24, Math.max(10, Math.floor(lineH * 0.37)));
+
+    displayPlayers.filter(p => p.name).slice(0, maxPlayers).forEach((p, i) => {
       const y = listY + i * lineH + lineH/2;
       // Row bg (alternating subtle)
       ctx.save(); ctx.globalAlpha = i % 2 === 0 ? 0.08 : 0.04;
@@ -4300,23 +4411,32 @@ function sgGenerate() {
       ctx.restore();
 
       // Number
-      ctx.save(); ctx.font = 'bold 28px Arial, sans-serif'; ctx.fillStyle = '#d4a83a';
-      ctx.textAlign = 'right'; ctx.fillText((i + 1) + '.', listX + 28, y + 10);
+      ctx.save(); ctx.font = 'bold ' + numFontSize + 'px Arial, sans-serif'; ctx.fillStyle = '#d4a83a';
+      ctx.textAlign = 'right'; ctx.fillText((i + 1) + '.', listX + 28, y + numFontSize * 0.35);
       ctx.restore();
 
-      // Name
-      ctx.save(); ctx.font = 'bold 34px Arial, sans-serif';
+      // Name — measure and shrink further if it overflows the right edge
+      let finalFontSize = nameFontSize;
+      ctx.font = 'bold ' + finalFontSize + 'px Arial, sans-serif';
+      const maxNameW = W - listX - 50;
+      const nameText = p.name ? p.name.toUpperCase() : '';
+      while (finalFontSize > 14 && ctx.measureText(nameText).width > maxNameW) {
+        finalFontSize -= 1;
+        ctx.font = 'bold ' + finalFontSize + 'px Arial, sans-serif';
+      }
+      ctx.save(); ctx.font = 'bold ' + finalFontSize + 'px Arial, sans-serif';
       ctx.fillStyle = i === 0 ? '#ffffff' : '#e8ede9';
       ctx.textAlign = 'left'; ctx.shadowColor = 'rgba(0,0,0,0.6)'; ctx.shadowBlur = 4;
-      ctx.fillText(p.name ? p.name.toUpperCase() : '', listX + 40, y + 12);
+      ctx.fillText(nameText, listX + 40, y + finalFontSize * 0.37);
       ctx.restore();
 
       // Badge (C), (VC), WK
       if (p.badge) {
-        const nameW = ctx.measureText((p.name||'').toUpperCase()).width;
-        ctx.save(); ctx.font = 'bold 24px Arial, sans-serif';
+        ctx.save(); ctx.font = 'bold ' + finalFontSize + 'px Arial, sans-serif';
+        const nameW = ctx.measureText(nameText).width;
+        ctx.font = 'bold ' + badgeFontSize + 'px Arial, sans-serif';
         ctx.fillStyle = '#d4a83a'; ctx.textAlign = 'left';
-        ctx.fillText(' ' + p.badge, listX + 40 + nameW + 2, y + 10);
+        ctx.fillText(' ' + p.badge, listX + 40 + nameW + 2, y + finalFontSize * 0.35);
         ctx.restore();
       }
     });
@@ -4363,6 +4483,69 @@ function sgDownload() {
   link.href = canvas.toDataURL('image/png');
   link.click();
 }
+
+// ── LIVE SCORE WIDGET ──────────────────────────────────────────────────────
+var LSW_SYNC_URL = 'https://script.google.com/macros/s/AKfycbwOMzB4iHdQWYpam3fhwy8TC_mau1Z4-uO11p_npKo-VNnVKbU7dpH0aWFOTS27tFUb/exec';
+var LSW_LIVE_URL = 'https://misramrit-maker.github.io/ACC-Scoring/live.html';
+var LSW_SHEET_ID = '103Q-Zwh__0O0AodbsKq1bcBcI9mU1qDtFR8v1Nxt3MA';
+
+async function lswGetTabs() {
+  var r = await fetch(LSW_SYNC_URL + '?action=tabs&t=' + Date.now());
+  var d = await r.json();
+  return (d.status === 'ok' && d.tabs) ? d.tabs : [];
+}
+
+async function lswGetScore(tab) {
+  var url = 'https://docs.google.com/spreadsheets/d/' + LSW_SHEET_ID + '/gviz/tq?tqx=out:json&sheet=' + encodeURIComponent(tab) + '&t=' + Date.now();
+  var r = await fetch(url);
+  var t = await r.text();
+  var j = JSON.parse(t.substring(t.indexOf('{'), t.lastIndexOf('}') + 1));
+  if (!j.table) return null;
+  var rows = j.table.rows.map(function(r){ return r.c ? r.c.map(function(c){ return (c && c.v != null) ? String(c.v) : ''; }) : []; });
+  // Parse key fields
+  var s = { battingTeam:'', runs:'0', wkts:'0', overs:'0.0', rr:'0.00', innings:'1st' };
+  for (var i = 0; i < rows.length; i++) {
+    var c0 = rows[i][0]||'', c1 = rows[i][1]||'', c2 = rows[i][2]||'';
+    if (c0.indexOf('batting') !== -1 && c1 === '') s.battingTeam = c0.replace(' batting','').trim();
+    if (c1.indexOf('overs') !== -1 && c0.indexOf('/') !== -1) {
+      var sp = c0.split('/'); s.runs = sp[0]; s.wkts = sp[1]||'0';
+      s.overs = c1.replace(/[()]/g,'').replace('overs','').trim();
+      s.rr = c2.replace('RR: ','');
+    }
+    if (c0.indexOf('2ND') !== -1) s.innings = '2nd';
+  }
+  return s;
+}
+
+async function lswLoad() {
+  var el = document.getElementById('lsw-content');
+  if (!el) return;
+  try {
+    var tabs = await lswGetTabs();
+    if (!tabs.length) {
+      el.innerHTML = '<div class="lsw-empty">No live matches right now</div>';
+      return;
+    }
+    var html = '';
+    for (var i = 0; i < Math.min(tabs.length, 3); i++) {
+      var s = await lswGetScore(tabs[i]);
+      if (!s) continue;
+      var matchUrl = LSW_LIVE_URL + '?match=' + encodeURIComponent(tabs[i]);
+      html += '<a class="lsw-match-card" href="' + matchUrl + '" target="_blank">'
+        + '<div class="lsw-match-title">' + tabs[i] + '</div>'
+        + '<div class="lsw-match-score"><span class="lsw-runs">' + s.runs + '</span><span class="lsw-sep">/</span><span class="lsw-wkts">' + s.wkts + '</span></div>'
+        + '<div class="lsw-meta">' + s.overs + ' ov &middot; <span class="lsw-rr">RR ' + s.rr + '</span>' + (s.battingTeam ? ' &middot; ' + s.battingTeam : '') + ' &middot; ' + s.innings + ' Inn</div>'
+        + '</a>';
+    }
+    el.innerHTML = html || '<div class="lsw-empty">No live matches right now</div>';
+  } catch(e) {
+    el.innerHTML = '<div class="lsw-empty">Could not load live scores</div>';
+  }
+}
+
+// Load on startup and refresh every 30 seconds
+lswLoad();
+setInterval(lswLoad, 30000);
 </script>
 
 <div id="modal-kit-bg" class="modal-backdrop hidden" onclick="if(event.target===this)closeKitModal()">
