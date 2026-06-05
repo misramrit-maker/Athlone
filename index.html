@@ -4615,19 +4615,19 @@ setInterval(lswLoad, 30000);
         <option value="">-- select your name --</option>
       </select>
     </div>
-    <div style="display:flex;gap:10px;margin-top:14px;margin-bottom:18px;">
+    <div style="display:flex;gap:10px;margin-top:14px;margin-bottom:14px;">
       <button class="avail-choice-btn active" id="avail-btn-yes" onclick="setAvailChoice('yes')">&#x2705; Available</button>
       <button class="avail-choice-btn" id="avail-btn-no" onclick="setAvailChoice('no')">&#x274C; Unavailable</button>
       <button class="avail-choice-btn" id="avail-btn-maybe" onclick="setAvailChoice('maybe')">&#x1F914; Maybe</button>
     </div>
-    <div class="form-row" style="margin-top:14px;">
+    <button class="btn btn-primary" onclick="saveAvailability()" style="width:100%;padding:11px;font-size:14px;border-radius:10px;margin-bottom:16px;">&#x1F4BE; Save Availability</button>
+    <div class="form-row" style="margin-top:4px;">
       <label>&#x1F697; Need a lift? <span style="font-weight:400;color:var(--text3);font-size:12px;">(optional — enter pickup location)</span></label>
       <input type="text" id="avail-lift" placeholder="e.g. Town centre, Monksland..." style="margin-top:6px;">
     </div>
     <div id="avail-summary" style="margin-top:14px;"></div>
     <div class="modal-footer">
       <button class="btn" onclick="closeAvailModal()">Close</button>
-      <button class="btn btn-primary" onclick="saveAvailability()">Save</button>
     </div>
   </div>
 </div>
