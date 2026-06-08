@@ -287,61 +287,6 @@
   ::-webkit-scrollbar-track { background: var(--bg); }
   ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
 
-  /* -- KIDS SECTION ------------------------------------- */
-  .kids-accent { --kids-color: #f9a825; }
-  .kids-header-band {
-    background: linear-gradient(105deg, rgba(249,168,37,.09) 0%, transparent 70%);
-    border: 1px solid rgba(249,168,37,.25);
-    border-radius: 14px; padding: 16px 20px; margin-bottom: 20px;
-    display: flex; align-items: center; gap: 14px;
-  }
-  .kids-header-icon { font-size: 36px; }
-  .kids-header-title { font-family: 'Playfair Display', serif; font-size: 18px; font-weight: 700; color: var(--text); }
-  .kids-header-sub { font-size: 12px; color: var(--text3); margin-top: 3px; }
-
-  .kid-card {
-    position: relative; display: flex; align-items: flex-start; gap: 12px;
-    padding: 14px 16px; background: var(--surface); border: 1px solid var(--border);
-    border-radius: var(--radius); transition: border-color .15s, box-shadow .15s;
-    margin-bottom: 10px;
-  }
-  .kid-card:hover { border-color: rgba(249,168,37,.4); box-shadow: var(--shadow); }
-  .kid-avatar {
-    width: 40px; height: 40px; min-width: 40px; border-radius: 50%;
-    background: rgba(249,168,37,.12); display: flex; align-items: center;
-    justify-content: center; font-weight: 700; font-size: 14px;
-    color: #f9a825; border: 1px solid rgba(249,168,37,.3);
-  }
-  .kid-name { font-weight: 600; font-size: 14px; color: var(--text); }
-  .kid-meta { font-size: 12px; color: var(--text3); margin-top: 3px; }
-  .kid-actions { display: flex; gap: 6px; margin-top: 8px; }
-  .badge-kids { background: rgba(249,168,37,.14); color: #f9a825; }
-
-  .training-card {
-    background: var(--surface); border: 1px solid var(--border);
-    border-radius: var(--radius); padding: 16px 18px; margin-bottom: 10px;
-    transition: border-color .15s;
-  }
-  .training-card:hover { border-color: rgba(249,168,37,.4); }
-  .training-card.past-session { opacity: .6; }
-  .training-header { display: flex; align-items: flex-start; justify-content: space-between; flex-wrap: wrap; gap: 10px; }
-  .training-date-block { display: flex; align-items: center; gap: 14px; }
-  .training-day { font-family: 'Playfair Display', serif; font-size: 28px; font-weight: 700; color: var(--text); line-height: 1; }
-  .training-mon { font-size: 10px; color: var(--text3); font-weight: 700; text-transform: uppercase; letter-spacing: .06em; margin-top: 2px; }
-  .training-info { flex: 1; }
-  .training-time { font-weight: 700; font-size: 15px; color: var(--text); }
-  .training-venue { font-size: 12px; color: var(--text3); margin-top: 3px; }
-  .training-focus { font-size: 12px; color: #f9a825; margin-top: 4px; font-weight: 600; }
-  .training-notes-text { font-size: 12px; color: var(--text2); margin-top: 4px; font-style: italic; }
-  .training-actions { display: flex; gap: 6px; align-items: center; }
-  .training-attendees { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border); display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
-  .kid-chip { display: inline-flex; align-items: center; gap: 5px; background: rgba(249,168,37,.12); color: #f9a825; border-radius: 99px; padding: 3px 10px; font-size: 12px; font-weight: 600; }
-  .kid-chip-remove { background: none; border: none; color: #f9a825; cursor: pointer; font-size: 14px; padding: 0; line-height: 1; opacity: .7; }
-  .kid-chip-remove:hover { opacity: 1; }
-
-  .btn-kids { background: rgba(249,168,37,.15); color: #f9a825; border-color: rgba(249,168,37,.35); font-weight: 600; }
-  .btn-kids:hover { background: rgba(249,168,37,.25); color: #f9a825; border-color: rgba(249,168,37,.6); }
-
   /* -- TEAM SHEET ---------------------------------------- */
   .ts-tabs { display: flex; gap: 6px; margin-bottom: 16px; flex-wrap: wrap; }
   .ts-tab {
@@ -945,7 +890,6 @@
     <button class="nav-btn" onclick="showPage('selection', this)">Selection</button>
     <button class="nav-btn" onclick="showPage('results', this)">Results</button>
     <button class="nav-btn" onclick="showPage('practice', this)">Practice</button>
-    <button class="nav-btn" onclick="showPage('kids', this)" style="color:#f9a825;background:rgba(249,168,37,0.12);border:1px solid rgba(249,168,37,0.3);">🧒 Kids</button>
     <button class="nav-btn" onclick="window.open('https://misramrit-maker.github.io/ACC-Scoring/','_blank')" style="color:var(--gold);background:var(--gold-dim);">🏏 Scoring ↗</button>
     <button class="nav-btn" onclick="window.open('https://misramrit-maker.github.io/ACC-Scoring/live.html','_blank')" style="color:#39ff14;background:rgba(57,255,20,0.1);border:1px solid rgba(57,255,20,0.3);">🔴 Live ↗</button>
   </nav>
@@ -1341,64 +1285,6 @@
   </div>
 
 
-  <!-- KIDS -->
-  <div id="page-kids" class="page">
-    <!-- Header band -->
-    <div class="kids-header-band">
-      <div class="kids-header-icon">🧒</div>
-      <div>
-        <div class="kids-header-title">Kids Programme</div>
-        <div class="kids-header-sub">Junior player profiles &amp; cricket training sessions</div>
-      </div>
-    </div>
-
-    <!-- Sub-tabs -->
-    <div class="sub-tabs" id="kids-subtabs">
-      <button class="sub-tab active" onclick="kidsShowTab('details', this)">👦 Kids Details</button>
-      <button class="sub-tab" onclick="kidsShowTab('training', this)">🏏 Cricket Training</button>
-    </div>
-
-    <!-- ── KIDS DETAILS ── -->
-    <div id="kids-details-section">
-      <div class="page-header" style="margin-bottom:16px;">
-        <div>
-          <div style="font-size:13px;color:var(--text3);" id="kids-count">0 registered juniors</div>
-        </div>
-        <button class="btn btn-kids" onclick="openAddKid()">+ Add Junior</button>
-      </div>
-
-      <!-- Age-group filter -->
-      <div class="sub-tabs" style="margin-bottom:16px;">
-        <button class="sub-tab active" onclick="filterKids('all',this)">All</button>
-        <button class="sub-tab" onclick="filterKids('U8',this)">Under 8</button>
-        <button class="sub-tab" onclick="filterKids('U10',this)">Under 10</button>
-        <button class="sub-tab" onclick="filterKids('U13',this)">Under 13</button>
-        <button class="sub-tab" onclick="filterKids('U15',this)">Under 15</button>
-        <button class="sub-tab" onclick="filterKids('U17',this)">Under 17</button>
-      </div>
-
-      <div id="kids-list"></div>
-      <div id="kids-empty" class="empty-state hidden">No junior players registered yet. Click <strong>+ Add Junior</strong> to get started.</div>
-    </div>
-
-    <!-- ── KIDS TRAINING ── -->
-    <div id="kids-training-section" style="display:none;">
-      <div class="page-header" style="margin-bottom:16px;">
-        <div style="font-size:13px;color:var(--text3);" id="training-count"></div>
-        <button class="btn btn-kids" onclick="openAddTraining()">+ Add Session</button>
-      </div>
-
-      <div id="training-upcoming-wrap">
-        <div class="section-label">Upcoming Sessions</div>
-        <div id="training-upcoming"></div>
-      </div>
-      <div style="margin-top:22px;">
-        <div class="section-label">Past Sessions</div>
-        <div id="training-past"></div>
-      </div>
-    </div>
-  </div>
-
   <!-- FOOTER -->
   <footer class="club-footer">
     <div class="footer-inner">
@@ -1692,7 +1578,7 @@ function showPage(name, btn) {
   document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
   document.getElementById('page-'+name).classList.add('active');
   if (btn) btn.classList.add('active');
-  ({players:renderPlayers,schedule:()=>{renderSchedule();renderFixedSchedule();renderThisWeek();},selection:renderSelectionPage,results:()=>{renderResults();},photos:renderPhotos,stats:renderStats,kit:renderKit,practice:renderPractice,kids:()=>{renderKids();renderTrainings();}})[name]?.();
+  ({players:renderPlayers,schedule:()=>{renderSchedule();renderFixedSchedule();renderThisWeek();},selection:renderSelectionPage,results:()=>{renderResults();},photos:renderPhotos,stats:renderStats,kit:renderKit,practice:renderPractice})[name]?.();
 }
 
 function updateHeader() {
@@ -2961,44 +2847,25 @@ function renderHome() {
   document.getElementById('home-results-summary').innerHTML = resultsHTML;
   var upcomingPractice = (practiceSessions||[])
     .filter(function(s) { return s.date >= today; })
-    .map(function(s) { return Object.assign({}, s, { _type: 'practice' }); });
+    .sort(function(a,b) { return a.date.localeCompare(b.date); })
+    .slice(0, 3);
 
-  var upcomingKidsTraining = (kidsTrainings||[])
-    .filter(function(s) { return s.date >= today; })
-    .map(function(s) { return Object.assign({}, s, { _type: 'kids' }); });
-
-  var allUpcoming = upcomingPractice.concat(upcomingKidsTraining)
-    .sort(function(a,b) { return a.date.localeCompare(b.date) || (a.time||'').localeCompare(b.time||''); })
-    .slice(0, 5);
-
-  var practiceHTML = '<div class="home-section-title" onclick="showPage(\'practice\',document.querySelector(\'.nav-btn[onclick*=\\\'practice\\\']\'))" style="margin-top:20px;cursor:pointer;display:inline-flex;align-items:center;gap:6px;">&#x1F3CF; Upcoming Training &amp; Practice</div>';
-  if (!allUpcoming.length) {
-    practiceHTML += '<div class="home-empty">No practice or training sessions scheduled</div>';
+  var practiceHTML = '<div class="home-section-title" onclick="showPage(\'practice\',document.querySelector(\'.nav-btn[onclick*=\\\'practice\\\']\'))" style="margin-top:20px;cursor:pointer;display:inline-flex;align-items:center;gap:6px;">&#x1F3CF; Upcoming Practice</div>';
+  if (!upcomingPractice.length) {
+    practiceHTML += '<div class="home-empty">No practice sessions scheduled</div>';
   } else {
-    practiceHTML += allUpcoming.map(function(s) {
+    practiceHTML += upcomingPractice.map(function(s) {
       var d = new Date(s.date + 'T12:00:00');
       var day = d.getDate();
       var mon = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][d.getMonth()];
       var weekday = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][d.getDay()];
-      var isKids = s._type === 'kids';
-      var borderColor = isKids ? 'rgba(249,168,37,.45)' : 'var(--border)';
-      var label = isKids
-        ? '🧒 Kids Training' + (s.focus ? ' · ' + s.focus : '')
-        : '🏏 Practice Session';
-      var venuePart = s.venue ? ' <span style="color:var(--text3)">📍 ' + s.venue + '</span>' : '';
-      var groupPart = isKids && s.ageGroups && s.ageGroups.length
-        ? ' · <span style="color:#f9a825;font-weight:600;">' + s.ageGroups.join(', ') + '</span>'
-        : '';
-      var attendPart = s.attendees && s.attendees.length ? ' · ' + s.attendees.length + ' attending' : '';
-      var dest = isKids ? 'kids' : 'practice';
-      var navBtn = isKids
-        ? 'document.querySelector(\'.nav-btn[onclick*=\\\'kids\\\']\'))'
-        : 'document.querySelector(\'.nav-btn[onclick*=\\\'practice\\\']\'))';
-      return '<div class="home-fixture-card" onclick="showPage(\'' + dest + '\',' + navBtn + '" style="cursor:pointer;border-left:3px solid ' + borderColor + ';">'
+      return '<div class="home-fixture-card" onclick="showPage(\'practice\',document.querySelector(\'.nav-btn[onclick*=\\\'practice\\\']\'))" style="cursor:pointer;">'
         + '<div class="home-fix-date"><div class="home-fix-day">' + day + '</div><div class="home-fix-mon">' + weekday + ' ' + mon + '</div></div>'
         + '<div class="home-fix-body">'
-        + '<div class="home-fix-opp">' + label + venuePart + '</div>'
-        + '<div class="home-fix-meta">' + (s.time ? fmtTime(s.time) : 'Time TBC') + groupPart + attendPart + '</div>'
+        + '<div class="home-fix-opp">Practice Session'
+        + (s.venue ? ' &#x1F4CD; ' + s.venue : '') + '</div>'
+        + '<div class="home-fix-meta">' + (s.time ? fmtTime(s.time) : 'Time TBC')
+        + (s.attendees && s.attendees.length ? ' &middot; ' + s.attendees.length + ' attending' : '') + '</div>'
         + '</div></div>';
     }).join('');
   }
@@ -3016,7 +2883,7 @@ function renderHome() {
 
 async function loadFromSheets() {
   // Render local data immediately — app works without Sheets
-  renderPlayers(); updateHeader(); renderFixedSchedule(); renderPractice(); renderKids(); renderTrainings();
+  renderPlayers(); updateHeader(); renderFixedSchedule(); renderPractice();
 
   if (!SCRIPT_URL) return;
 
@@ -3077,15 +2944,13 @@ function processSheetData(json) {
     if (d['Kit']          && d['Kit'].length          > 1) { kitData          = rowsToKit(d['Kit']);                sv('acc_kit', kitData);           updated = true; }
     if (d['Practice']     && d['Practice'].length     > 1) { practiceSessions = rowsToPractice(d['Practice']);       sv('acc_practice', practiceSessions); updated = true; }
     if (d['Availability'] && d['Availability'].length > 1) { availability     = rowsToAvailability(d['Availability']); sv('acc_availability', availability); updated = true; }
-    if (d['Juniors']      && d['Juniors'].length      > 1) { kidsPlayers   = rowsToKidsPlayers(d['Juniors']);     sv('acc_kids', kidsPlayers);          updated = true; }
-    if (d['KidsTraining'] && d['KidsTraining'].length > 1) { kidsTrainings = rowsToKidsTrainings(d['KidsTraining']); sv('acc_kids_training', kidsTrainings); updated = true; }
     if (d['Selections']   && d['Selections'].length   > 1) {
       const raw = rowsToSelections(d['Selections']);
       selections = resolveSelections(raw, players);
       sv(K.s, selections);
       updated = true;
     }
-    if (updated) { renderPlayers(); updateHeader(); renderFixedSchedule(); renderPractice(); renderThisWeek(); renderResults(); renderHome(); renderKids(); renderTrainings(); }
+    if (updated) { renderPlayers(); updateHeader(); renderFixedSchedule(); renderPractice(); renderThisWeek(); renderResults(); renderHome(); }
     setSyncStatus('ok', 'Sheets synced');
   } else {
     setSyncStatus('idle', 'Offline');
@@ -4679,391 +4544,9 @@ async function lswLoad() {
   }
 }
 
-// ── KIDS MODULE ───────────────────────────────────────────────────────────────
-
-// ---- In-memory state (mirrors pattern of players/matches/etc) ----
-var kidsPlayers   = ld('acc_kids')            || [];
-var kidsTrainings = ld('acc_kids_training')   || [];
-
-// ---- Storage helpers ----
-function kidsGetAll()    { return kidsPlayers; }
-function kidsSave(arr)   { kidsPlayers = arr; sv('acc_kids', arr); }
-function trainingsGetAll() { return kidsTrainings; }
-function trainingsSave(arr){ kidsTrainings = arr; sv('acc_kids_training', arr); }
-
-// ---- Sheets row converters ----
-function rowsToKidsPlayers(rows) {
-  var headers = rows[0];
-  return rows.slice(1).map(function(row) {
-    var o = {};
-    headers.forEach(function(h, i){ o[h] = row[i] || ''; });
-    return {
-      id: o['ID'] || ('k_' + Date.now() + Math.random()),
-      firstName: o['First Name']   || '',
-      lastName:  o['Last Name']    || '',
-      dob:       o['Date of Birth']|| '',
-      ageGroup:  o['Age Group']    || 'U13',
-      bat:       o['Batting Style']|| '',
-      bowl:      o['Bowling Style']|| '',
-      parent:    o['Parent Name']  || '',
-      contact:   o['Parent Contact']|| '',
-      notes:     o['Notes']        || '',
-      savedAt:   o['Saved At']     || '',
-    };
-  }).filter(function(k){ return k.firstName; });
-}
-
-function rowsToKidsTrainings(rows) {
-  var headers = rows[0];
-  return rows.slice(1).map(function(row) {
-    var o = {};
-    headers.forEach(function(h, i){ o[h] = row[i] || ''; });
-    return {
-      id:        o['ID']         || ('tr_' + Date.now() + Math.random()),
-      date:      o['Date']       || '',
-      time:      o['Time']       || '',
-      venue:     o['Venue']      || '',
-      focus:     o['Focus']      || '',
-      notes:     o['Notes']      || '',
-      ageGroups: o['Age Groups'] ? o['Age Groups'].split(',').map(function(g){ return g.trim(); }).filter(Boolean) : [],
-      attendees: o['Attendees']  ? o['Attendees'].split(',').map(function(n){ return n.trim(); }).filter(Boolean) : [],
-      savedAt:   o['Saved At']   || '',
-    };
-  }).filter(function(s){ return s.date; });
-}
-
-// ---- Sync helpers ----
-function syncKidToSheet(k) {
-  syncToSheet('Juniors',
-    ['ID','First Name','Last Name','Date of Birth','Age Group','Batting Style','Bowling Style','Parent Name','Parent Contact','Notes','Saved At'],
-    [k.id, k.firstName, k.lastName, k.dob||'', k.ageGroup, k.bat||'', k.bowl||'', k.parent||'', k.contact||'', k.notes||'', k.savedAt],
-    'ID');
-}
-
-function syncTrainingToSheet(s) {
-  syncToSheet('KidsTraining',
-    ['ID','Date','Time','Venue','Focus','Age Groups','Notes','Attendees','Saved At'],
-    [s.id, s.date, s.time||'', s.venue||'', s.focus||'', (s.ageGroups||[]).join(', '), s.notes||'', (s.attendees||[]).join(', '), s.savedAt],
-    'ID');
-}
-
-// ---- Sub-tab switching ----
-function kidsShowTab(tab, btn) {
-  document.getElementById('kids-details-section').style.display  = tab === 'details'  ? '' : 'none';
-  document.getElementById('kids-training-section').style.display = tab === 'training' ? '' : 'none';
-  document.querySelectorAll('#kids-subtabs .sub-tab').forEach(b => b.classList.remove('active'));
-  if (btn) btn.classList.add('active');
-  if (tab === 'details')  renderKids();
-  if (tab === 'training') renderTrainings();
-}
-
-// ── KIDS DETAILS ─────────────────────────────────────────────────────────────
-var _kidsFilter = 'all';
-
-function filterKids(group, btn) {
-  _kidsFilter = group;
-  document.querySelectorAll('#kids-details-section .sub-tabs .sub-tab').forEach(b => b.classList.remove('active'));
-  if (btn) btn.classList.add('active');
-  renderKids();
-}
-
-function renderKids() {
-  var kids = kidsGetAll();
-  var filtered = _kidsFilter === 'all' ? kids : kids.filter(k => k.ageGroup === _kidsFilter);
-  var list = document.getElementById('kids-list');
-  var empty = document.getElementById('kids-empty');
-  document.getElementById('kids-count').textContent = kids.length + ' registered junior' + (kids.length !== 1 ? 's' : '');
-
-  if (!filtered.length) {
-    list.innerHTML = '';
-    empty.classList.remove('hidden');
-    return;
-  }
-  empty.classList.add('hidden');
-
-  // Sort by age group then name
-  var order = ['U8','U10','U13','U15','U17'];
-  filtered.sort(function(a,b){ return order.indexOf(a.ageGroup)-order.indexOf(b.ageGroup) || a.firstName.localeCompare(b.firstName); });
-
-  list.innerHTML = filtered.map(function(k) {
-    var initials = (k.firstName[0]||'') + (k.lastName[0]||'');
-    var age = k.dob ? Math.floor((Date.now() - new Date(k.dob)) / (365.25*24*3600*1000)) : null;
-    return '<div class="kid-card">'
-      + '<div class="kid-avatar">' + initials.toUpperCase() + '</div>'
-      + '<div style="flex:1;">'
-      + '<div class="kid-name">' + k.firstName + ' ' + k.lastName + '</div>'
-      + '<div class="kid-meta">'
-        + '<span class="badge badge-kids" style="margin-right:6px;">' + k.ageGroup + '</span>'
-        + (age ? age + ' yrs · ' : '')
-        + (k.bat && k.bat !== 'Not specified' ? k.bat : '') + (k.bat && k.bat !== 'Not specified' && k.bowl && k.bowl !== 'Not specified' ? ' / ' : '') + (k.bowl && k.bowl !== 'Not specified' ? k.bowl : '')
-      + '</div>'
-      + (k.parent ? '<div style="font-size:11px;color:var(--text3);margin-top:4px;">👤 ' + k.parent + (k.contact ? ' · 📞 ' + k.contact : '') + '</div>' : '')
-      + (k.notes ? '<div style="font-size:11px;color:var(--text2);margin-top:3px;font-style:italic;">⚠ ' + k.notes + '</div>' : '')
-      + '<div class="kid-actions">'
-        + '<button class="btn btn-sm" onclick="openEditKid(\'' + k.id + '\')">Edit</button>'
-        + '<button class="btn btn-sm btn-danger" onclick="deleteKid(\'' + k.id + '\')">Remove</button>'
-      + '</div>'
-      + '</div></div>';
-  }).join('');
-}
-
-function openAddKid() {
-  document.getElementById('kid-modal-title').textContent = 'Add Junior Player';
-  document.getElementById('kid-first').value = '';
-  document.getElementById('kid-last').value = '';
-  document.getElementById('kid-dob').value = '';
-  document.getElementById('kid-agegroup').value = 'U13';
-  document.getElementById('kid-bat').value = '';
-  document.getElementById('kid-bowl').value = '';
-  document.getElementById('kid-parent').value = '';
-  document.getElementById('kid-contact').value = '';
-  document.getElementById('kid-notes').value = '';
-  document.getElementById('kid-edit-id').value = '';
-  document.getElementById('modal-kid-bg').classList.remove('hidden');
-}
-
-function openEditKid(id) {
-  var kids = kidsGetAll();
-  var k = kids.find(function(x){ return x.id === id; });
-  if (!k) return;
-  document.getElementById('kid-modal-title').textContent = 'Edit Junior Player';
-  document.getElementById('kid-first').value = k.firstName || '';
-  document.getElementById('kid-last').value = k.lastName || '';
-  document.getElementById('kid-dob').value = k.dob || '';
-  document.getElementById('kid-agegroup').value = k.ageGroup || 'U13';
-  document.getElementById('kid-bat').value = k.bat || '';
-  document.getElementById('kid-bowl').value = k.bowl || '';
-  document.getElementById('kid-parent').value = k.parent || '';
-  document.getElementById('kid-contact').value = k.contact || '';
-  document.getElementById('kid-notes').value = k.notes || '';
-  document.getElementById('kid-edit-id').value = id;
-  document.getElementById('modal-kid-bg').classList.remove('hidden');
-}
-
-function saveKid() {
-  var first = document.getElementById('kid-first').value.trim();
-  var last  = document.getElementById('kid-last').value.trim();
-  if (!first) { alert('Please enter a first name.'); return; }
-  var kids = kidsGetAll();
-  var editId = document.getElementById('kid-edit-id').value;
-  var kid = {
-    id:        editId || ('k_' + Date.now()),
-    firstName: first,
-    lastName:  last,
-    dob:       document.getElementById('kid-dob').value,
-    ageGroup:  document.getElementById('kid-agegroup').value,
-    bat:       document.getElementById('kid-bat').value,
-    bowl:      document.getElementById('kid-bowl').value,
-    parent:    document.getElementById('kid-parent').value.trim(),
-    contact:   document.getElementById('kid-contact').value.trim(),
-    notes:     document.getElementById('kid-notes').value.trim(),
-    savedAt:   new Date().toISOString(),
-  };
-  if (editId) {
-    var idx = kids.findIndex(function(k){ return k.id === editId; });
-    if (idx > -1) kids[idx] = kid;
-  } else {
-    kids.push(kid);
-  }
-  kidsSave(kids);
-  closeKidModal();
-  renderKids();
-  syncKidToSheet(kid);
-}
-
-function deleteKid(id) {
-  if (!confirm('Remove this junior player?')) return;
-  kidsSave(kidsGetAll().filter(function(k){ return k.id !== id; }));
-  renderKids();
-  syncDeleteToSheet('Juniors', 'ID', id);
-}
-
-function closeKidModal() { document.getElementById('modal-kid-bg').classList.add('hidden'); }
-
-// ── KIDS TRAINING ─────────────────────────────────────────────────────────────
-function renderTrainings() {
-  var sessions = trainingsGetAll();
-  var today = new Date(); today.setHours(0,0,0,0);
-  var upcoming = sessions.filter(function(s){ return new Date(s.date) >= today; }).sort(function(a,b){ return new Date(a.date)-new Date(b.date); });
-  var past     = sessions.filter(function(s){ return new Date(s.date) < today; }).sort(function(a,b){ return new Date(b.date)-new Date(a.date); });
-  document.getElementById('training-count').textContent = sessions.length + ' session' + (sessions.length !== 1 ? 's' : '') + ' total';
-
-  var upEl = document.getElementById('training-upcoming');
-  var paEl = document.getElementById('training-past');
-  upEl.innerHTML = upcoming.length ? upcoming.map(trainingCardHTML).join('') : '<div class="empty-state" style="padding:20px 0;">No upcoming sessions. Click <strong>+ Add Session</strong> to schedule one.</div>';
-  paEl.innerHTML = past.length ? past.map(function(s){ return trainingCardHTML(s, true); }).join('') : '<div style="font-size:13px;color:var(--text3);padding:12px 0;">No past sessions yet.</div>';
-}
-
-function trainingCardHTML(s, isPast) {
-  var d = new Date(s.date + 'T00:00:00');
-  var day = d.getDate();
-  var mon = d.toLocaleString('default', { month: 'short' }).toUpperCase();
-  var timeStr = s.time ? formatTime12(s.time) : '';
-  var groups = (s.ageGroups || []).map(function(g){ return '<span class="badge badge-kids" style="margin-right:3px;">' + g + '</span>'; }).join('');
-  var attendees = s.attendees || [];
-  var attendeeChips = attendees.map(function(n){
-    return '<span class="kid-chip">' + n + '<button class="kid-chip-remove" onclick="removeTrAttendee(\'' + s.id + '\',\'' + n.replace(/'/g,"\\'") + '\')" title="Remove">×</button></span>';
-  }).join('');
-
-  return '<div class="training-card' + (isPast ? ' past-session' : '') + '">'
-    + '<div class="training-header">'
-      + '<div class="training-date-block">'
-        + '<div><div class="training-day">' + day + '</div><div class="training-mon">' + mon + '</div></div>'
-        + '<div class="training-info">'
-          + '<div class="training-time">' + (timeStr || 'Time TBC') + (s.venue ? ' · ' + s.venue : '') + '</div>'
-          + (s.focus ? '<div class="training-focus">🎯 ' + s.focus + '</div>' : '')
-          + (groups ? '<div style="margin-top:5px;">' + groups + '</div>' : '')
-          + (s.notes ? '<div class="training-notes-text">' + s.notes + '</div>' : '')
-        + '</div>'
-      + '</div>'
-      + '<div class="training-actions">'
-        + (!isPast ? '<button class="btn btn-sm btn-kids" onclick="openTrAttendModal(\'' + s.id + '\')">+ Attendance</button>' : '')
-        + '<button class="btn btn-sm" onclick="openEditTraining(\'' + s.id + '\')">Edit</button>'
-        + '<button class="btn btn-sm btn-danger" onclick="deleteTraining(\'' + s.id + '\')">✕</button>'
-      + '</div>'
-    + '</div>'
-    + '<div class="training-attendees">'
-      + '<span class="attend-count" style="color:var(--text3);font-size:12px;margin-right:6px;">🧒 ' + attendees.length + ' attending</span>'
-      + attendeeChips
-    + '</div>'
-    + '</div>';
-}
-
-function formatTime12(t) {
-  if (!t) return '';
-  var parts = t.split(':'); var h = parseInt(parts[0]); var m = parts[1];
-  var ampm = h >= 12 ? 'pm' : 'am';
-  h = h % 12 || 12;
-  return h + ':' + m + ' ' + ampm;
-}
-
-function openAddTraining() {
-  document.getElementById('training-modal-title').textContent = 'Add Training Session';
-  document.getElementById('tr-date').value = '';
-  document.getElementById('tr-time').value = '';
-  document.getElementById('tr-venue').value = '';
-  document.getElementById('tr-focus').value = '';
-  document.getElementById('tr-notes').value = '';
-  document.getElementById('tr-edit-id').value = '';
-  document.querySelectorAll('#tr-agegroup-checks input').forEach(function(cb){ cb.checked = false; });
-  document.getElementById('modal-training-bg').classList.remove('hidden');
-}
-
-function openEditTraining(id) {
-  var sessions = trainingsGetAll();
-  var s = sessions.find(function(x){ return x.id === id; });
-  if (!s) return;
-  document.getElementById('training-modal-title').textContent = 'Edit Training Session';
-  document.getElementById('tr-date').value = s.date || '';
-  document.getElementById('tr-time').value = s.time || '';
-  document.getElementById('tr-venue').value = s.venue || '';
-  document.getElementById('tr-focus').value = s.focus || '';
-  document.getElementById('tr-notes').value = s.notes || '';
-  document.getElementById('tr-edit-id').value = id;
-  var groups = s.ageGroups || [];
-  document.querySelectorAll('#tr-agegroup-checks input').forEach(function(cb){ cb.checked = groups.indexOf(cb.value) > -1; });
-  document.getElementById('modal-training-bg').classList.remove('hidden');
-}
-
-function saveTraining() {
-  var date = document.getElementById('tr-date').value;
-  if (!date) { alert('Please pick a date.'); return; }
-  var groups = [];
-  document.querySelectorAll('#tr-agegroup-checks input:checked').forEach(function(cb){ groups.push(cb.value); });
-  var sessions = trainingsGetAll();
-  var editId = document.getElementById('tr-edit-id').value;
-  var session = {
-    id:        editId || ('tr_' + Date.now()),
-    date:      date,
-    time:      document.getElementById('tr-time').value,
-    venue:     document.getElementById('tr-venue').value.trim(),
-    focus:     document.getElementById('tr-focus').value,
-    notes:     document.getElementById('tr-notes').value.trim(),
-    ageGroups: groups,
-    attendees: editId ? ((sessions.find(function(s){ return s.id === editId; }) || {}).attendees || []) : [],
-    savedAt:   new Date().toISOString(),
-  };
-  if (editId) {
-    var idx = sessions.findIndex(function(s){ return s.id === editId; });
-    if (idx > -1) sessions[idx] = session;
-  } else {
-    sessions.push(session);
-  }
-  trainingsSave(sessions);
-  closeTrainingModal();
-  renderTrainings();
-  renderHome();
-  syncTrainingToSheet(session);
-}
-
-function deleteTraining(id) {
-  if (!confirm('Delete this training session?')) return;
-  trainingsSave(trainingsGetAll().filter(function(s){ return s.id !== id; }));
-  renderTrainings();
-  syncDeleteToSheet('KidsTraining', 'ID', id);
-}
-
-function closeTrainingModal() { document.getElementById('modal-training-bg').classList.add('hidden'); }
-
-// -- Training attendance --
-var _trAttendSessionId = null;
-function openTrAttendModal(sid) {
-  _trAttendSessionId = sid;
-  var sessions = trainingsGetAll();
-  var s = sessions.find(function(x){ return x.id === sid; });
-  var d = s ? new Date(s.date + 'T00:00:00') : null;
-  document.getElementById('tr-attend-meta').textContent = s ? (s.venue || '') + (d ? '  ·  ' + d.toDateString() : '') : '';
-  // Populate select with registered kids
-  var kids = kidsGetAll();
-  var groups = s && s.ageGroups && s.ageGroups.length ? s.ageGroups : null;
-  var filteredKids = groups ? kids.filter(function(k){ return groups.indexOf(k.ageGroup) > -1; }) : kids;
-  var opts = '<option value="">-- select --</option>' + filteredKids.map(function(k){
-    return '<option value="' + (k.firstName + ' ' + k.lastName) + '">' + k.firstName + ' ' + k.lastName + ' (' + k.ageGroup + ')</option>';
-  }).join('');
-  document.getElementById('tr-attend-select').innerHTML = opts;
-  renderTrAttendCurrent(s);
-  document.getElementById('modal-tr-attend-bg').classList.remove('hidden');
-}
-
-function renderTrAttendCurrent(s) {
-  var attendees = s ? (s.attendees || []) : [];
-  var el = document.getElementById('tr-attend-current');
-  el.innerHTML = attendees.length
-    ? '<div style="margin-top:8px;display:flex;flex-wrap:wrap;gap:6px;">' + attendees.map(function(n){
-        return '<span class="kid-chip">' + n + '<button class="kid-chip-remove" onclick="removeTrAttendee(\'' + s.id + '\',\'' + n.replace(/'/g,"\\'") + '\', true)">×</button></span>';
-      }).join('') + '</div>'
-    : '<div style="font-size:12px;color:var(--text3);margin-top:8px;">No attendees marked yet.</div>';
-}
-
-function addTrAttendee() {
-  var name = document.getElementById('tr-attend-select').value;
-  if (!name) return;
-  var sessions = trainingsGetAll();
-  var s = sessions.find(function(x){ return x.id === _trAttendSessionId; });
-  if (!s) return;
-  if (!s.attendees) s.attendees = [];
-  if (s.attendees.indexOf(name) === -1) s.attendees.push(name);
-  trainingsSave(sessions);
-  renderTrAttendCurrent(s);
-  renderTrainings();
-  syncTrainingToSheet(s);
-}
-
-function removeTrAttendee(sid, name, inModal) {
-  var sessions = trainingsGetAll();
-  var s = sessions.find(function(x){ return x.id === sid; });
-  if (!s) return;
-  s.attendees = (s.attendees || []).filter(function(n){ return n !== name; });
-  trainingsSave(sessions);
-  if (inModal) renderTrAttendCurrent(s);
-  renderTrainings();
-  syncTrainingToSheet(s);
-}
-
-function closeTrAttendModal() { document.getElementById('modal-tr-attend-bg').classList.add('hidden'); _trAttendSessionId = null; }
-
-// initialise on page load
-(function(){ renderKids(); })();
+// Load on startup and refresh every 30 seconds
+lswLoad();
+setInterval(lswLoad, 30000);
 </script>
 
 <div id="modal-kit-bg" class="modal-backdrop hidden" onclick="if(event.target===this)closeKitModal()">
@@ -5148,114 +4631,5 @@ function closeTrAttendModal() { document.getElementById('modal-tr-attend-bg').cl
     </div>
   </div>
 </div>
-<!-- MODAL: Add Junior Player -->
-<div id="modal-kid-bg" class="modal-backdrop hidden" onclick="if(event.target===this)closeKidModal()">
-  <div id="modal-kid" class="modal" style="max-width:520px;">
-    <div class="modal-title" id="kid-modal-title">Add Junior Player</div>
-    <div class="form-2col">
-      <div class="form-row"><label>First Name</label><input type="text" id="kid-first" placeholder="e.g. Conor"></div>
-      <div class="form-row"><label>Last Name</label><input type="text" id="kid-last" placeholder="e.g. Murphy"></div>
-    </div>
-    <div class="form-2col">
-      <div class="form-row"><label>Date of Birth</label><input type="date" id="kid-dob"></div>
-      <div class="form-row"><label>Age Group</label>
-        <select id="kid-agegroup">
-          <option value="U8">Under 8</option>
-          <option value="U10">Under 10</option>
-          <option value="U13" selected>Under 13</option>
-          <option value="U15">Under 15</option>
-          <option value="U17">Under 17</option>
-        </select>
-      </div>
-    </div>
-    <div class="form-2col">
-      <div class="form-row"><label>Batting Style</label>
-        <select id="kid-bat">
-          <option value="">Not specified</option>
-          <option>Right-hand bat</option>
-          <option>Left-hand bat</option>
-        </select>
-      </div>
-      <div class="form-row"><label>Bowling Style</label>
-        <select id="kid-bowl">
-          <option value="">Not specified</option>
-          <option>Right-arm fast</option>
-          <option>Right-arm medium</option>
-          <option>Right-arm spin</option>
-          <option>Left-arm fast</option>
-          <option>Left-arm medium</option>
-          <option>Left-arm spin</option>
-        </select>
-      </div>
-    </div>
-    <div class="form-row"><label>Parent / Guardian Name</label><input type="text" id="kid-parent" placeholder="e.g. Mary Murphy"></div>
-    <div class="form-row"><label>Parent Contact Number</label><input type="text" id="kid-contact" placeholder="e.g. 087 123 4567"></div>
-    <div class="form-row"><label>Medical / Special Notes</label><textarea id="kid-notes" rows="2" placeholder="e.g. Asthma, inhaler required"></textarea></div>
-    <input type="hidden" id="kid-edit-id">
-    <div class="modal-footer">
-      <button class="btn" onclick="closeKidModal()">Cancel</button>
-      <button class="btn btn-kids" onclick="saveKid()">Save Junior</button>
-    </div>
-  </div>
-</div>
-
-<!-- MODAL: Add Training Session -->
-<div id="modal-training-bg" class="modal-backdrop hidden" onclick="if(event.target===this)closeTrainingModal()">
-  <div id="modal-training" class="modal" style="max-width:500px;">
-    <div class="modal-title" id="training-modal-title">Add Training Session</div>
-    <div class="form-2col">
-      <div class="form-row"><label>Date</label><input type="date" id="tr-date"></div>
-      <div class="form-row"><label>Time</label><input type="time" id="tr-time"></div>
-    </div>
-    <div class="form-row"><label>Venue</label><input type="text" id="tr-venue" placeholder="e.g. Coosan Ground"></div>
-    <div class="form-row"><label>Session Focus</label>
-      <select id="tr-focus">
-        <option value="">General Training</option>
-        <option>Batting</option>
-        <option>Bowling</option>
-        <option>Fielding</option>
-        <option>Wicketkeeping</option>
-        <option>Match Play</option>
-        <option>Fitness & Agility</option>
-        <option>Fun & Games</option>
-      </select>
-    </div>
-    <div class="form-row"><label>Age Groups</label>
-      <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:4px;" id="tr-agegroup-checks">
-        <label style="display:flex;align-items:center;gap:5px;font-size:13px;color:var(--text2);text-transform:none;letter-spacing:0;font-weight:400;"><input type="checkbox" value="U8" style="width:14px;height:14px;accent-color:#f9a825;"> U8</label>
-        <label style="display:flex;align-items:center;gap:5px;font-size:13px;color:var(--text2);text-transform:none;letter-spacing:0;font-weight:400;"><input type="checkbox" value="U10" style="width:14px;height:14px;accent-color:#f9a825;"> U10</label>
-        <label style="display:flex;align-items:center;gap:5px;font-size:13px;color:var(--text2);text-transform:none;letter-spacing:0;font-weight:400;"><input type="checkbox" value="U13" style="width:14px;height:14px;accent-color:#f9a825;"> U13</label>
-        <label style="display:flex;align-items:center;gap:5px;font-size:13px;color:var(--text2);text-transform:none;letter-spacing:0;font-weight:400;"><input type="checkbox" value="U15" style="width:14px;height:14px;accent-color:#f9a825;"> U15</label>
-        <label style="display:flex;align-items:center;gap:5px;font-size:13px;color:var(--text2);text-transform:none;letter-spacing:0;font-weight:400;"><input type="checkbox" value="U17" style="width:14px;height:14px;accent-color:#f9a825;"> U17</label>
-      </div>
-    </div>
-    <div class="form-row"><label>Coach / Notes</label><input type="text" id="tr-notes" placeholder="e.g. Coach Brendan – bring helmet"></div>
-    <input type="hidden" id="tr-edit-id">
-    <div class="modal-footer">
-      <button class="btn" onclick="closeTrainingModal()">Cancel</button>
-      <button class="btn btn-kids" onclick="saveTraining()">Save Session</button>
-    </div>
-  </div>
-</div>
-
-<!-- MODAL: Training Attendance -->
-<div id="modal-tr-attend-bg" class="modal-backdrop hidden" onclick="if(event.target===this)closeTrAttendModal()">
-  <div id="modal-tr-attend" class="modal" style="max-width:440px;">
-    <div class="modal-title">Mark Attendance</div>
-    <div style="font-size:12px;color:var(--text3);margin-bottom:14px;" id="tr-attend-meta"></div>
-    <input type="hidden" id="tr-attend-session-id">
-    <div class="form-row"><label>Junior Player</label>
-      <select id="tr-attend-select">
-        <option value="">-- select a junior --</option>
-      </select>
-    </div>
-    <div id="tr-attend-current" style="margin-top:12px;"></div>
-    <div class="modal-footer">
-      <button class="btn" onclick="closeTrAttendModal()">Close</button>
-      <button class="btn btn-kids" onclick="addTrAttendee()">Add</button>
-    </div>
-  </div>
-</div>
-
 </body>
 </html>
